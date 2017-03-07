@@ -1,0 +1,280 @@
+<html>
+<head>
+  <title>Bikeshare map</title>
+  <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.18.0/d3-legend.js"></script>
+<script src="d3.geo.tile.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-ease.v1.min.js"></script>
+<script src="https://d3js.org/d3-transition.v1.min.js"></script>
+
+
+
+<link rel="stylesheet" href="mapzen_styles.css" /> 
+<link rel="stylesheet" href="minimal-ui.css" /> 
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="txt-center">
+        <h1 class="column12">Bikeshare Map</h1>
+      </div>
+    </div>
+  </header>
+
+<div class="container">
+      <div id="selector">
+      <div id="season">
+      <h3>Season of 2016</h3>
+        <select id="select-key-season">
+          <option value="Winter">Winter</option>
+          <option value="Spring">Spring</option>
+          <option value="Summer">Summer</option>
+          <option value="Fall"  selected="selected">Fall</option>
+        </select>
+      </div>
+      <div id="day">
+      <h3>Day of Week</h3>
+        <select id="select-key-day">
+          <option value="Weekday" selected="selected">Weekday</option>
+          <option value="Weekend">Weekend</option>
+        </select>
+      </div>
+</div>
+<div class="container">
+    <div class="row">
+    <div id="date">
+      <p>Time of Day:</p>
+      <p id="month"></p>
+    </div>
+    <div id="play"><button class="btn">Play</button></div>
+    <div id="slider-container">
+<!--       <div id="slider-div"></div>
+      <div id="slider-probe">
+        <p></p>
+        <div></div>
+      </div> -->
+    </div>
+    </div>
+    <div id="mapBox" class="txt-center"><!-- Map container -->
+    </div>
+    <div id="plot"><!-- Map container --> </div>
+</div>
+
+  <script>
+
+
+var width = Math.max(960, window.innerWidth/2),
+    height = Math.max(500, window.innerHeight);
+
+var sliderStart = 240;
+
+var tiler = d3.geoTile()
+    .size([width, height]);
+
+var projection = d3.geoMercator()
+    .center([-71.09, 42.363])
+    .scale((1 << 21) / 2.2 / Math.PI)
+    .translate([width / 2, height / 2]);
+
+var areaScale = d3.scaleTime()
+    .domain([0,677])
+    .range([0, 40]);
+
+var fillScale = d3.scaleSequential(d3.interpolateRdBu)
+    .domain([-1,1]);
+
+var timeScale = d3.scaleTime()
+    .domain([new Date(2000, 0, 1, 0), new Date(2000, 0, 2, 0)])
+    .range([0,47])
+    .clamp(true);
+
+var formatTime = d3.timeFormat("%-I %p");
+
+var path = d3.geoPath()
+    .projection(projection);
+
+
+var sliderscale = d3.scaleLinear()
+    .domain([sliderStart,width])
+    .range([0,47])
+    .interpolate(d3.interpolateRound)
+    .clamp(true);
+
+var dispatch = d3.dispatch("sliderChange");
+
+var slider = d3.select("#slider-container")
+    .style("width", width-200 + "px");
+var sliderSVG = slider.append("svg")
+    .attr("width", width-200 + "px")
+    .attr("height",20 + "px");
+
+// var sliderTray = sliderSVG.append("div")
+//     .attr("class", "slider-tray");
+
+// var sliderHandle = sliderTray.append("g")
+//     .attr("class", "slider-handle");
+
+sliderIcon = sliderSVG.append("circle")
+    .attr("class", "slider-handle-icon")
+    .attr("cx",sliderStart)
+    .attr("cy",10)
+    .attr("r",7)
+
+// sliderHandle.append("circle")
+//     .attr("class", "slider-handle-icon")
+
+
+var svg = d3.select("#mapBox").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.selectAll("g")
+    .data(tiler
+      .scale(projection.scale() * 2 * Math.PI)
+      .translate(projection([0, 0])))
+  .enter().append("g")
+    .each(function(d) {
+      var g = d3.select(this);
+      d3.queue().defer(d3.json,"https://vector.mapzen.com/osm/water/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=vector-tiles-LM25tq4")
+      .defer(d3.json,"https://vector.mapzen.com/osm/roads/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=vector-tiles-LM25tq4")
+      .await(function(error,file1,file2) {
+        if (error) throw error;
+          g.selectAll("path")
+            .data(file1.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
+            .enter().append("path")
+            .attr("class", function(d) { var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
+           .attr("d", path);
+          g.selectAll("path")
+            .data(file2.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
+            .enter().append("path")
+            .attr("class", function(d) { 
+              var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
+            .attr("d", path);
+      });
+    });
+
+d3.csv("Data/Formatted/stationtime.csv",function(error, stationdata) {
+  if (error) return console.warn(error);
+
+  function drawStations(stationdata) {
+    var keys = d3.keys(stationdata[0]);
+    svg.selectAll("circle")
+      .data(stationdata)
+      .enter().append("circle")
+      .attr("class","station")
+      .attr("fill", function(d) {
+        return fillScale(d[keys[3]])
+      })
+      .attr("r", function(d) {
+        return areaScale(d[keys[51]])
+      })
+      .attr("transform", function(d) {
+        var projectionTransform = projection([
+          d.Long,
+          d.Lat
+          ]) ;
+        return "translate(" + projectionTransform+ ")"})
+  }
+
+  function updateStations(timeind,delayind,stationdata) {
+    var keys = d3.keys(stationdata[0]);
+    var colorind = 3+timeind;
+    var sizeind = 3+48+timeind;
+    svg.selectAll(".station")
+      .transition()
+      .ease(d3.easeLinear)
+      .duration(300)
+      .delay(300*delayind)
+      .attr("class","station")
+      .attr("fill", function(d) {
+        return fillScale(d[keys[colorind]])
+      })
+      .attr("r", function(d) {
+       return areaScale(d[keys[sizeind]])
+      })
+      .attr("transform", function(d) {
+        var projectionTransform = projection([
+          d.Long,
+          d.Lat
+        ]) ;
+        return "translate(" + projectionTransform+ ")"})
+    // if (ii==47) {
+    //   svg.selectAll("circle")
+    //     .transition()
+    //     .delay(300*timeind)
+    //     .remove();
+    //   drawStations(stationdata);
+    // }
+  }
+
+
+  drawStations(stationdata) 
+  loopStations(stationdata)
+
+  function loopStations(stationdata) {
+    for (ii=0;ii<48;ii++) {
+      updateStations(ii,ii,stationdata);
+      updateTimeBox(sliderscale.invert(ii),ii)
+      // sliderIcon.selectAll("*")
+      d3.select(".slider-handle-icon")
+        .transition()
+        // .remove()
+        .delay(300*ii)
+        .each(function() {console.log(sliderscale.invert(ii))})
+        .attr("cx", sliderscale.invert(ii)-sliderStart + "px");
+    }
+    updateStations(0,48,stationdata);
+    updateTimeBox(sliderscale.invert(0),ii)
+  }
+
+
+  slider.call(d3.drag()
+    .on("start", function(){
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+    .on("drag", function(){
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+    .on("end", function(){
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+    );
+
+  dispatch.on("sliderChange", function(value) {
+    // var newvalue = value;
+    if (value - sliderStart < 0) {newvalue = sliderStart}
+      else if (value - sliderStart > width) {newvalue = width+sliderStart}
+      else {newvalue = value}
+    d3.select(".slider-handle-icon")
+        .transition()
+        // .delay(0)
+        .remove();
+    console.log(value)
+    updateTimeBox(newvalue,0)
+    // sliderHandle.style("left", newvalue + "px");
+    sliderIcon.attr("cx", newvalue-sliderStart + "px");
+    // sliderHandle.style("left", newvalue-40 + "px")
+    newTime = sliderscale(newvalue);
+    updateStationsSlider(newTime,stationdata)
+  });
+
+  function updateTimeBox(xPosition,delay) {
+    var monthLabel = formatTime(timeScale.invert(sliderscale(xPosition)));
+    d3.select("#date p#month")
+      .transition()
+      .delay(delay*300)
+      .text( monthLabel );
+  }
+
+  function updateStationsSlider(sliderValue,stationdata) {
+    svg.selectAll("circle")
+      .transition();
+    updateStations(sliderValue,0,stationdata);
+  };
+});
+
+
+</script>
+</body>
+</html>
