@@ -110,7 +110,14 @@ var slider = d3.select("#slider-container")
     .style("width", width-200 + "px");
 var sliderSVG = slider.append("svg")
     .attr("width", width-200 + "px")
-    .attr("height",20 + "px");
+    .attr("height",30 + "px");
+
+var sliderbar = sliderSVG.append("rect")
+    .attr("width", width-200 + "px")
+    .attr("x", 0 + "px")
+    .attr("y", 8 + "px")
+    .attr("fill", "#9DD9D2")
+    .attr("height",4 + "px");
 
 // var sliderTray = sliderSVG.append("div")
 //     .attr("class", "slider-tray");
