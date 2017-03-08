@@ -13,7 +13,7 @@ for i=20:22
 
 end
 
-[ stationdata ] = readStationFile( 'Data/Hubway_Stations_2011_2016.csv' );
+[ stationdata ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
 
 %%
 nHourBins = 2;
@@ -24,5 +24,12 @@ today = tripdata(y == 2016 & m == 10 & ~isweekend(tripdata.starttime),:);
 startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;
 stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
 
-[ outtable ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
+[ outtable, triparray ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
 
+%%
+
+% corrmatrix = corr(triparray');
+corrmatrix = pdist(triparray','correlation');
+tree = linkage(squareform(corrmatrix),'average','correlation');
+dendrogram(tree)
+leafOrder = optimalleaforder(tree,squareform(corrmatrix));

@@ -35,7 +35,7 @@ body {
 .buildings-layer { stroke: #987284; stroke-width: 0.15px; }
 .park, .nature_reserve, .wood, .protected_land { fill: #88D18A; stroke: #88D18A; stroke-width: 0.5px; }
 .pier { fill: #fff; stroke: #fff; stroke-width: 0.5px; }
-.rail { stroke: #d9d9d9; stroke-width: 0px; }
+.rail { stroke: #d9d9d9; stroke-width: 0.5px; }
 
 .station {stroke: #252525; stroke-width: 0.5px; }
 
