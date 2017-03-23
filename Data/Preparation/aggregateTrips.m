@@ -2,8 +2,10 @@ function [ outTable, tripArray ] = aggregateTrips( trips, stations, startInd, st
 %UNTITLED4 Summary of this function goes here
 %   Detailed explanation goes here
 
-startMat = zeros(height(stations),nHourBins*24);
-endMat = zeros(height(stations),nHourBins*24);
+nRows = length(unique([startInd;stopInd]));
+
+startMat = zeros(height(stations),nRows);
+endMat = zeros(height(stations),nRows);
 
 nTrips = height(trips);
 
@@ -16,12 +18,24 @@ startStationId = allStationIds(1:nTrips);
 endStationId = allStationIds((nTrips+1):end);
 % [~,~,endStationId] = unique(trips.endStationId);
 
+[~,timeID,allTimeIds] = unique([startInd;stopInd]);
+startTimeId = allTimeIds(1:nTrips);
+endTimeId = allTimeIds((nTrips+1):end);
+
 stationName = combinedStations(stationNameID);
 Lat = combinedLat(stationNameID);
 Long = combinedLong(stationNameID);
 
-starts = accumarray([startStationId,startInd],trips.birthYear,[height(stations),nHourBins*24],@nnz);
-ends = accumarray([endStationId,stopInd],trips.birthYear,[height(stations),nHourBins*24],@nnz);
+min(startStationId)
+min(startInd)
+
+% [startStationCrossID, startTimeCrossID] = meshgrid(startStationId,startTimeId);
+% startStationCrossID = startStationCrossID(:);
+% startTimeCrossID = startTimeCrossID(:);
+% tallTableID = startStationCrossID + max(startStationCrossID)*(startTimeCrossID-1);
+
+starts = accumarray([startStationId,startTimeId],trips.birthYear,[height(stations),nRows],@nnz);
+ends = accumarray([endStationId,endTimeId],trips.birthYear,[height(stations),nRows],@nnz);
 
 tripArray = [starts, ends];
 

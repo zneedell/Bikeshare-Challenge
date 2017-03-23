@@ -27,9 +27,19 @@ stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
 [ outtable, triparray ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
 
 %%
+ymd = [y,m,d];
+startHoursInd = floor(hours(tripdata.starttime-datetime(ymd(1,:))));
+endHoursInd = floor(hours(tripdata.starttime-datetime(ymd(1,:))));
+mask = (y == 2016 & m == 10 & ~isweekend(tripdata.starttime));
 
+[ outtable, triparray ] = aggregateTrips( today, stationdata, startHoursInd(mask), endHoursInd(mask), nHourBins );
+
+
+%%
 % corrmatrix = corr(triparray');
-corrmatrix = pdist(triparray','correlation');
-tree = linkage(squareform(corrmatrix),'average','correlation');
+corrmatrix = pdist(triparray,'correlation');
+corrmatrix = squareform(corrmatrix);
+tree = linkage(corrmatrix,'average','correlation');
 dendrogram(tree)
-leafOrder = optimalleaforder(tree,squareform(corrmatrix));
+leafOrder = optimalleaforder(tree,corrmatrix);
+imagesc(corrmatrix(leafOrder,leafOrder))

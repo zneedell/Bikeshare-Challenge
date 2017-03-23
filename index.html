@@ -70,6 +70,8 @@
 var width = Math.max(960, window.innerWidth/2),
     height = Math.max(500, window.innerHeight/1.25);
 
+var timestep = 600;
+
 var sliderStart = 240;
 
 var tiler = d3.geoTile()
@@ -82,7 +84,7 @@ var projection = d3.geoMercator()
 
 var areaScale = d3.scaleTime()
     .domain([0,677])
-    .range([0, 40]);
+    .range([1, 40]);
 
 var fillScale = d3.scaleSequential(d3.interpolateRdBu)
     .domain([-1,1]);
@@ -230,7 +232,7 @@ d3.csv("Data/Formatted/stationtime.csv",function(error, stationdata) {
       d3.select(".slider-handle-icon")
         .transition()
         // .remove()
-        .delay(300*ii)
+        .delay(timestep*ii)
         .each(function() {console.log(sliderscale.invert(ii))})
         .attr("cx", sliderscale.invert(ii)-sliderStart + "px");
     }
@@ -270,7 +272,7 @@ d3.csv("Data/Formatted/stationtime.csv",function(error, stationdata) {
     var monthLabel = formatTime(timeScale.invert(sliderscale(xPosition)));
     d3.select("#date p#month")
       .transition()
-      .delay(delay*300)
+      .delay(delay*timestep)
       .text( monthLabel );
   }
 
