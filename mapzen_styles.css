@@ -2,6 +2,16 @@ body {
   margin: 0;
 }
 
+.line {
+  fill: none;
+  stroke: darkmagenta;
+  stroke-width: 2px;
+}
+
+#EndLine {
+  stroke: orange;
+}
+
 .map {
   position: relative;
   overflow: hidden;
