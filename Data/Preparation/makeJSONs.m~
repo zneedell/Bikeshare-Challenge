@@ -1,0 +1,33 @@
+dname='../Trips/';
+files=dir([dname,'*.csv']);
+nHourBins = 2;
+
+%% Load and generate station struct
+
+[ stationdata, stationstruct ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
+
+%% Load Winter
+
+clear tripdata
+for i=12:14
+    if ~exist('tripdata','var') == 1
+        tripdata=readTripFile([dname,files(i).name]);
+    else
+        subdata = readTripFile([dname,files(i).name]);
+        tripdata = [tripdata;subdata];
+    end
+
+end
+
+
+[y,m,d] = ymd(tripdata.starttime);
+today = tripdata(y == 2016 & m == 10 & ~isweekend(tripdata.starttime),:);
+
+startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;
+stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
+
+%[ outTable, tripArray, newstationstruct ] = addArrivalDeparture( today, stationstruct, startInd, stopInd );
+
+[ outtable, triparray ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
+
+%%

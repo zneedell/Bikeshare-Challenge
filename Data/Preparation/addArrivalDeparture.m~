@@ -1,0 +1,48 @@
+function [ outTable, tripArray ] = addArrivalDeparture( trips, stationstruct, startInd, stopInd )
+%UNTITLED4 Summary of this function goes here
+%   Detailed explanation goes here
+
+nRows = length(unique([startInd;stopInd]));
+
+startMat = zeros(height(stations),nRows);
+endMat = zeros(height(stations),nRows);
+
+nTrips = height(trips);
+
+stationName = [stationstruct.Name];
+[startFound,startStationID] = ismember(tripdata.startStationName,stationName);
+[endFound,endStationID] = ismember(tripdata.startStationName,stationName);
+
+
+[~,timeID,allTimeIds] = unique([startInd;stopInd]);
+startTimeId = allTimeIds(1:nTrips);
+endTimeId = allTimeIds((nTrips+1):end);
+
+stationName = combinedStations(stationNameID);
+Lat = combinedLat(stationNameID);
+Long = combinedLong(stationNameID);
+
+min(startStationId)
+min(startInd)
+
+% [startStationCrossID, startTimeCrossID] = meshgrid(startStationId,startTimeId);
+% startStationCrossID = startStationCrossID(:);
+% startTimeCrossID = startTimeCrossID(:);
+% tallTableID = startStationCrossID + max(startStationCrossID)*(startTimeCrossID-1);
+
+starts = accumarray([startStationId,startTimeId],trips.birthYear,[height(stations),nRows],@nnz);
+ends = accumarray([endStationId,endTimeId],trips.birthYear,[height(stations),nRows],@nnz);
+
+tripArray = [starts, ends];
+
+totalTrips = starts + ends;
+tripRatio = (starts - ends)./totalTrips;
+tripRatio(isnan(tripRatio)) = 0;
+
+a = array2table(tripRatio);
+b = array2table(totalTrips);
+
+outTable = [table(stationName),table(Lat),table(Long),a,b];
+
+end
+
