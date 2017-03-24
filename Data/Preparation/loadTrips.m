@@ -3,7 +3,7 @@ files=dir([dname,'*.csv']);
 
 clear tripdata
 
-for i=20:22
+for i=21:22
     if ~exist('tripdata','var') == 1
         tripdata=readTripFile([dname,files(i).name]);
     else
@@ -13,7 +13,7 @@ for i=20:22
 
 end
 
-[ stationdata ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
+[ stationdata, stationstruct ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
 
 %%
 nHourBins = 2;
@@ -24,7 +24,9 @@ today = tripdata(y == 2016 & m == 10 & ~isweekend(tripdata.starttime),:);
 startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;
 stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
 
-[ outtable, triparray ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
+[ outTable, tripArray, newstationstruct ] = addArrivalDeparture( today, stationstruct, startInd, stopInd );
+
+%[ outtable, triparray ] = aggregateTrips( today, stationdata, startInd, stopInd, nHourBins );
 
 %%
 ymd = [y,m,d];
