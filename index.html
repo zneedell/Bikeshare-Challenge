@@ -61,6 +61,10 @@
     </div>
     <div id="mapBox" class="txt-center"><!-- Map container -->
     </div>
+    <div id="stationinfo">
+      <p>Selected Station:</p>
+      <p id="stationname"></p>
+    </div>
     <div id="plot"><!-- Map container --> </div>
 </div>
 
@@ -183,7 +187,6 @@ var yaxis = plotsvg.append("g")
 
 var line = d3.line()
 	.x(function(d,i) {
-		// console.log((timeScale.invert(i)));
 		// plotgroup.append("circle")
 		// 	.attr("cx", x(timeScale.invert(i)))
 		// 	.attr("cy", y(d))
@@ -241,6 +244,8 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
       .on('click', function(a) { 
       	y.domain([0, d3.max(d3.merge([a[startName],a[endName]]))]);
       	yaxis.transition().call(d3.axisLeft(y))
+      	d3.select("#stationinfo p#stationname")
+      		.text( a.Name );
       	plotgroup.selectAll("path")
       		.remove();
       	plotgroup.selectAll("circle")
