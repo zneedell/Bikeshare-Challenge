@@ -26,6 +26,24 @@
   </header>
 
 <div class="container">
+<div class="container">
+    <div class="row">
+    <div id="date">
+      <p>Time of Day:</p>
+      <p id="month"></p>
+    </div>
+    <div id="play"><button class="btn">Play</button></div>
+    <div id="slider-container">
+<!--       <div id="slider-div"></div>
+      <div id="slider-probe">
+        <p></p>
+        <div></div>
+      </div> -->
+    </div>
+    </div>
+    <div id="mapBox" class="txt-center"><!-- Map container -->
+    </div>
+
       <div id="selector">
       <div id="season">
       <h3>Season of 2016</h3>
@@ -44,23 +62,7 @@
         </select>
       </div>
 </div>
-<div class="container">
-    <div class="row">
-    <div id="date">
-      <p>Time of Day:</p>
-      <p id="month"></p>
-    </div>
-    <div id="play"><button class="btn">Play</button></div>
-    <div id="slider-container">
-<!--       <div id="slider-div"></div>
-      <div id="slider-probe">
-        <p></p>
-        <div></div>
-      </div> -->
-    </div>
-    </div>
-    <div id="mapBox" class="txt-center"><!-- Map container -->
-    </div>
+
     <div id="stationinfo">
       <p>Selected Station:</p>
       <p id="stationname"></p>
@@ -196,7 +198,8 @@ var line = d3.line()
 	})
     .y(function(d) { 
     	console.log((d))
-    	return y(d); });
+    	return y(d); })
+    .curve(d3.curveCardinal);
 
 svg.selectAll("g")
     .data(tiler
