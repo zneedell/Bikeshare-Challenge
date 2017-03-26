@@ -4,12 +4,12 @@ nHourBins = 2;
 
 %% Load and generate station struct
 
-[ stationdata, stationstruct ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
+[ stationdata, stationstruct, ODstruct ] = readStationFile( '../Hubway_Stations_2011_2016.csv' );
 
-%% Load Winter
+%% Load All Trips
 
 clear tripdata
-for i=12:14
+for i=12:23
     if ~exist('tripdata','var') == 1
         tripdata=readTripFile([dname,files(i).name]);
     else
@@ -21,6 +21,8 @@ end
 
 
 [y,m,d] = ymd(tripdata.starttime);
+
+%% Load Winter
 today = tripdata(~isweekend(tripdata.starttime),:);
 
 startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;

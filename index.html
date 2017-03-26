@@ -73,8 +73,8 @@
   <script>
 
 
-var width = Math.max(960, window.innerWidth/2),
-    height = Math.max(500, window.innerHeight/1.25),
+var width = Math.max(800, window.innerWidth/2),
+    height = Math.max(600, window.innerHeight/1.25),
     plotboxheight = Math.max(400, window.innerHeight/1.5);
 
 var margin = {top: 20, right: 40, bottom: 60, left: 60},
@@ -94,13 +94,14 @@ var tiler = d3.geoTile()
     .size([width, height]);
 
 var projection = d3.geoMercator()
-    .center([-71.09, 42.363])
-    .scale((1 << 21) / 2.4 / Math.PI)
+    .center([-71.09, 42.354])
+    .scale((1 << 21) / 2.7 / Math.PI)
     .translate([width / 2, height / 2]);
 
 var areaScale = d3.scaleTime()
-    .domain([0,877])
-    .range([0, 40]);
+    .domain([0,800])
+    .range([0, 32])
+    .clamp(true);
 
 var fillScale = d3.scaleSequential(d3.interpolateRdBu)
     .domain([-1,1]);
