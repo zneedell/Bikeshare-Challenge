@@ -48,17 +48,17 @@
       <div id="season">
       <h3>Season of 2016</h3>
         <select id="select-key-season">
-          <option value="Winter">Winter</option>
-          <option value="Spring">Spring</option>
-          <option value="Summer">Summer</option>
-          <option value="Fall"  selected="selected">Fall</option>
+          <option value="W">Winter</option>
+          <option value="Sp">Spring</option>
+          <option value="Su">Summer</option>
+          <option value="F"  selected="selected">Fall</option>
         </select>
       </div>
       <div id="day">
       <h3>Day of Week</h3>
         <select id="select-key-day">
-          <option value="Weekday" selected="selected">Weekday</option>
-          <option value="Weekend">Weekend</option>
+          <option value="WD" selected="selected">Weekday</option>
+          <option value="WE">Weekend</option>
         </select>
       </div>
 </div>
@@ -85,10 +85,11 @@ var timestep = 300;
 
 var sliderStart = 240;
 
-var seasonKey = "Fall"
-	startName = seasonKey + "Starts",
-	endName = seasonKey + "Ends",
-	timeIndex = 0;
+var seasonKey = "F",
+	dayKey = "WD",
+	aggName = seasonKey + "_" + dayKey,
+	timeIndex = 0,
+	hoursPerSeason = 5*4*3;
 
 var tiler = d3.geoTile()
     .size([width, height]);
@@ -99,7 +100,7 @@ var projection = d3.geoMercator()
     .translate([width / 2, height / 2]);
 
 var areaScale = d3.scaleTime()
-    .domain([0,800])
+    .domain([0,14])
     .range([0, 32])
     .clamp(true);
 
@@ -190,16 +191,10 @@ var yaxis = plotsvg.append("g")
 
 var line = d3.line()
 	.x(function(d,i) {
-		// plotgroup.append("circle")
-		// 	.attr("cx", x(timeScale.invert(i)))
-		// 	.attr("cy", y(d))
-		// 	.attr("r", 3)
-		// 	.attr("fill", fillScale(-0.8))
 		return x(timeScale.invert(i));
 	})
     .y(function(d) { 
-    	console.log((d))
-    	return y(d); })
+    	return y(d/hoursPerSeason); })
     .curve(d3.curveCardinal);
 
 svg.selectAll("g")
@@ -227,7 +222,7 @@ svg.selectAll("g")
       });
     });
 
-d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
+d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
   if (error) return console.warn(error);
 
   function drawStations(stationdata) {
@@ -236,37 +231,36 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
       .enter().append("circle")
       .attr("class","station")
       .attr("fill", function(d) {
-      	var starts = d[startName][timeIndex];
-      	var ends = d[endName][timeIndex];
+      	var starts = d[aggName].Starts[timeIndex];
+      	var ends = d[aggName].Ends[timeIndex];
         return fillScale((starts - ends)/(starts + ends))
       })
       .attr("r", function(d) {
-      	var starts = d[startName][timeIndex];
-      	var ends = d[endName][timeIndex];
-        return areaScale((starts + ends))
+      	console.log(d[aggName].Starts[timeIndex])
+      	var starts = d[aggName].Starts[timeIndex];
+      	var ends = d[aggName].Ends[timeIndex];
+        return areaScale((starts + ends)/hoursPerSeason)
       })
       .on('click', function(a) { 
-      	y.domain([0, d3.max(d3.merge([a[startName],a[endName]]))]);
+      	y.domain([0, (d3.max(d3.merge([a[aggName].Starts,a[aggName].Ends])))/hoursPerSeason]);
       	yaxis.transition().call(d3.axisLeft(y))
       	d3.select("#stationinfo p#stationname")
       		.text( a.Name );
       	plotgroup.selectAll("path")
-      		.remove();
-      	plotgroup.selectAll("circle")
       		.remove();
       	plotgroup.append("path")
       		.datum(a)
       		.attr("id","StartLine")
       		.attr("class","line")
       		.attr("d", function(d) { 
-      			return line(a[startName]); 
+      			return line(a[aggName].Starts); 
       		});
 		plotgroup.append("path")
       		.datum(a)
       		.attr("id","EndLine")
       		.attr("class","line")
       		.attr("d", function(d) { 
-      			return line(a[endName]); 
+      			return line(a[aggName].Ends); 
       		});
 
       	})
@@ -284,8 +278,7 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
    		})
   }
 
-  function updateStations(timeind,delayind,stationdata) {
-    var keys = d3.keys(stationdata[0]);
+  function updateStations(timeIndex,delayind,stationdata) {
     svg.selectAll(".station")
       .transition()
       .ease(d3.easeLinear)
@@ -293,14 +286,14 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
       .delay(timestep*delayind)
       .attr("class","station")
       .attr("fill", function(d) {
-      	var starts = d[startName][timeind];
-      	var ends = d[endName][timeind];
+      	var starts = d[aggName].Starts[timeIndex];
+      	var ends = d[aggName].Ends[timeIndex];
         return fillScale((starts - ends)/(starts + ends))
       })
       .attr("r", function(d) {
-      	var starts = d[startName][timeind];
-      	var ends = d[endName][timeind];
-        return areaScale((starts + ends))
+      	var starts = d[aggName].Starts[timeIndex];
+      	var ends = d[aggName].Ends[timeIndex];
+        return areaScale((starts + ends)/hoursPerSeason)
       })
   }
 
@@ -309,17 +302,15 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
   loopStations(stationdata)
 
   function loopStations(stationdata) {
-    for (ii=0;ii<48;ii++) {
-      updateStations(ii,ii,stationdata);
-      updateTimeBox(sliderscale.invert(ii),ii)
+    for (TimeIndex=0;TimeIndex<48;TimeIndex++) {
+      updateStations(TimeIndex,TimeIndex,stationdata);
+      updateTimeBox(sliderscale.invert(TimeIndex),TimeIndex)
       d3.select(".slider-handle-icon")
         .transition()
         .duration(timestep)
-        .delay(timestep*ii)
-        .attr("cx", sliderscale.invert(ii)-sliderStart + "px");
+        .delay(timestep*TimeIndex)
+        .attr("cx", sliderscale.invert(TimeIndex)-sliderStart + "px");
     }
-    // updateStations(0,48,stationdata);
-    // updateTimeBox(sliderscale.invert(0),ii)
   }
 
 
@@ -341,8 +332,8 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
         .transition();
     updateTimeBox(newvalue,0)
     sliderIcon.attr("cx", newvalue-sliderStart + "px");
-    newTime = sliderscale(newvalue);
-    updateStationsSlider(newTime,stationdata)
+    TimeIndex = sliderscale(newvalue);
+    updateStationsSlider(TimeIndex,stationdata)
   });
 
   function updateTimeBox(xPosition,delay) {
@@ -358,16 +349,25 @@ d3.json("Data/Formatted/stationData.json",function(error, stationdata) {
   };
 
 d3.select('#select-key-season').on('change', function(a) {
-  // Change the current key and call the function to update the colors.
   seasonKey = d3.select(this).property('value');
-  startName = seasonKey + "Starts";
-  endName = seasonKey + "Ends";
-  console.log(startName)
-  updateStations(newTime,0,stationdata);
+  aggName = seasonKey + "_" + dayKey,
+  console.log(aggName)
+  updateStations(Time,0,stationdata);
+});
+
+d3.select('#select-key-day').on('change', function(a) {
+  dayKey = d3.select(this).property('value');
+  aggName = seasonKey + "_" + dayKey,
+  console.log(aggName)
+  if (dayKey == "WE") 
+  	{hoursPerSeason = 2*4*3;}
+  	else
+  	{hoursPerSeason = 5*4*3;}
+  
+  updateStations(Time,0,stationdata);
 });
 
 d3.select('#play').on('click', function(a) {
-  // Change the current key and call the function to update the colors.
     loopStations(stationdata);
 });
 

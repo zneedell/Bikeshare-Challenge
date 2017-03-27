@@ -25,8 +25,10 @@ starts = accumarray([startStationId(startFound),startTimeId(startFound)],trips.b
 ends = accumarray([endStationId(endFound),endTimeId(endFound)],trips.birthYear(endFound),[length(stationstruct),nRows],@nnz);
 
 for ii = 1:length(stationName)
-    stationstruct(ii).Starts = starts(ii,:);
-    stationstruct(ii).Ends = ends(ii,:);
+    StartStop = struct();
+    StartStop.Starts = starts(ii,:);
+    StartStop.Ends = ends(ii,:);
+    stationstruct(ii).StartStop = StartStop();
     %stationstruct(ii).totalStarts = sum(starts(ii,:));
     %stationstruct(ii).totalEnds = sum(ends(ii,:));
 end
