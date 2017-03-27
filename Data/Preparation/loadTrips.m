@@ -39,9 +39,3 @@ mask = (y == 2016 & m == 10 & ~isweekend(tripdata.starttime));
 
 %%
 % corrmatrix = corr(triparray');
-corrmatrix = pdist(triparray,'correlation');
-corrmatrix = squareform(corrmatrix);
-tree = linkage(corrmatrix,'average','correlation');
-dendrogram(tree)
-leafOrder = optimalleaforder(tree,corrmatrix);
-imagesc(corrmatrix(leafOrder,leafOrder))

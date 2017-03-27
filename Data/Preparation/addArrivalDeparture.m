@@ -1,4 +1,4 @@
-function [ outTable, tripArray,stationstruct ] = addArrivalDeparture( trips, stationstruct, startInd, stopInd )
+function [tripArray,stationstruct ] = addArrivalDeparture( trips, stationstruct, startInd, stopInd )
 %UNTITLED4 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -34,15 +34,6 @@ for ii = 1:length(stationName)
 end
 
 tripArray = [starts, ends];
-
-totalTrips = starts + ends;
-tripRatio = (starts - ends)./totalTrips;
-tripRatio(isnan(tripRatio)) = 0;
-
-a = array2table(tripRatio);
-b = array2table(totalTrips);
-outTable = [];
-%outTable = [table(stationName),table(Lat),table(Lon),a,b];
 
 end
 

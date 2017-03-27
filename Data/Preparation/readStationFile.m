@@ -25,8 +25,8 @@ Olist = output.Station(Omat(:));
 Dlist = output.Station(Dmat(:));
 
 ODtable = table();
-ODtable.OorigOrder = Omat(:);
-ODtable.DorigOrder = Dmat(:);
+ODtable.O = Omat(:);
+ODtable.D = Dmat(:);
 ODstruct = table2struct(ODtable);
 
 % ODstruct = struct();

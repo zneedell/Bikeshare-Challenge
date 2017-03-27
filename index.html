@@ -9,6 +9,7 @@
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://d3js.org/d3-ease.v1.min.js"></script>
 <script src="https://d3js.org/d3-transition.v1.min.js"></script>
+<script src="d3-tip.js"></script>
 
 
 
@@ -25,7 +26,8 @@
     </div>
   </header>
 
-<div class="container">
+
+<section class="container" id="topmap">
 <div class="container">
     <div class="row">
     <div id="date">
@@ -34,11 +36,6 @@
     </div>
     <div id="play"><button class="btn">Play</button></div>
     <div id="slider-container">
-<!--       <div id="slider-div"></div>
-      <div id="slider-probe">
-        <p></p>
-        <div></div>
-      </div> -->
     </div>
     </div>
     <div id="mapBox" class="txt-center"><!-- Map container -->
@@ -67,11 +64,32 @@
       <p>Selected Station:</p>
       <p id="stationname"></p>
     </div>
-    <div id="plot"><!-- Map container --> </div>
+    <div id="plot" style="text-align:center;"><!-- Map container --> </div>
+</div>
+</section>
+<section class="bg-light" id="firstdescription">
+    <div class="container">
+      <div class="column6 prefix3">
+        <h4>Instructions</h4>
+          <div id="contents-md">
+            <ul>
+            <li> Instructions go here.
+            </ul>
+          </div>
+      </div>
+    </div>
+  </section>
+
+<section class="container" id="matrix">
+<div id="matrixBox" class="txt-center" style="text-align:center;"><!-- Box container -->
 </div>
 
-  <script>
+</section>
+<script>
 
+var yellow = d3.interpolateYlGn(0), // "rgb(255, 255, 229)"
+    yellowGreen = d3.interpolateYlGn(0.5), // "rgb(120, 197, 120)"
+    green = d3.interpolateYlGn(1); // "rgb(0, 69, 41)"
 
 var width = Math.max(800, window.innerWidth/2),
     height = Math.max(600, window.innerHeight/1.25),
@@ -82,6 +100,8 @@ var margin = {top: 20, right: 40, bottom: 60, left: 60},
     plotheight = plotboxheight - margin.top - margin.bottom;
 
 var timestep = 300;
+
+var boxsize = 4;
 
 var sliderStart = 240;
 
@@ -107,6 +127,9 @@ var areaScale = d3.scaleTime()
 var fillScale = d3.scaleSequential(d3.interpolateRdBu)
     .domain([-1,1]);
 
+var cellScale = d3.scaleSequential(d3.interpolatePuOr)
+    .domain([-1,1]);
+
 var timeScale = d3.scaleTime()
     .domain([new Date(2000, 0, 1, 0), new Date(2000, 0, 2, 0)])
     .range([0,47])
@@ -117,6 +140,9 @@ var formatTime = d3.timeFormat("%-I %p");
 var path = d3.geoPath()
     .projection(projection);
 
+var StationNames = [],
+	StationOrder = [],
+	ShowStation = [];
 
 var sliderscale = d3.scaleLinear()
     .domain([sliderStart,width])
@@ -149,9 +175,26 @@ var svg = d3.select("#mapBox").append("svg")
     .attr("width", width)
     .attr("height", height);
 
+var tool_tip = d3.tip()
+      .attr("class", "d3-tip")
+      .offset([-8, 0])
+      .html(function(d) { return d["Name"]; });
+    svg.call(tool_tip);
+
+var matrixsvg = d3.select("#matrixBox").append("svg")
+    .attr("width", width)
+    .attr("height", width);
+
+var matrix_tool_tip = d3.tip()
+      .attr("class", "d3-tip")
+      .offset([-8, 0])
+      .html(function(d) { return StationNames[d["O"]] + "<br>vs. <br> " + StationNames[d["D"]] });
+    matrixsvg.call(matrix_tool_tip);
+
 var plotsvg = d3.select("#plot").append("svg")
     .attr("width", width+ margin.left + margin.right)
-    .attr("height", plotboxheight+ margin.top + margin.bottom);
+    .attr("height", plotboxheight+ margin.top + margin.bottom)
+    .attr("align","center");
 
 var plotgroup = plotsvg.append("g")
     .attr("id","linechartgroup")
@@ -206,31 +249,74 @@ svg.selectAll("g")
             .attr("d", path);
       });
     });
-
-d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
+d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
+		  .defer(d3.json,"Data/Formatted/odData.json")
+		  .await(function(error, stationdata,oddata) {
   if (error) return console.warn(error);
 
-  drawStations(stationdata) 
-  loopStations(stationdata)
+  drawStations(stationdata);
+  loopStations(stationdata);
+  drawMatrix(oddata);
+  
+  
+  console.log(StationNames)
+  console.log(StationOrder)
 
+  function drawMatrix(oddata) {
+  	console.log(ShowStation)
+  	matrixsvg.selectAll("rect")
+  		.data(oddata)
+  		.enter()
+  		.append("rect")
+  		// .filter(function(d){
+  		// 	return d[aggName] > 0
+  		// })
+  		.attr("class","cell")
+  		.on('mouseover', matrix_tool_tip.show)
+      	.on('mouseout', matrix_tool_tip.hide)
+  		.attr("fill", function(d) { 
+  			return cellScale(d[aggName]-1)})
+  		.attr("transform", function(d){
+  			return("translate("+ StationOrder[d["O"]-1]*boxsize+ "," + StationOrder[d["D"]-1]*boxsize +")")
+  			})
+  		.attr("width",boxsize)
+  		.attr("height",boxsize);
+  }
+
+  function updateMatrix(oddata) {
+  	matrixsvg.selectAll("rect")
+  		.attr("fill", function(d) { 
+  			return cellScale(d[aggName]-1)})
+  		.attr("transform", function(d){
+  			return("translate("+ StationOrder[d["O"]-1]*boxsize+ "," + StationOrder[d["D"]-1]*boxsize +")")
+  			})
+  		.attr("width",boxsize)
+  		.attr("height",boxsize);
+  }
 
   function drawStations(stationdata) {
     svg.selectAll("circle")
       .data(stationdata)
       .enter().append("circle")
       .attr("class","station")
+      .each(function(d,i) {
+      	StationNames = StationNames.concat(d["Name"]);
+      	StationOrder = StationOrder.concat(d[aggName].Dst_Ord);
+      	ShowStation = ShowStation.concat(d[aggName].Dst_Show);
+      })
       .attr("fill", function(d) {
       	var starts = d[aggName].Starts[timeIndex];
       	var ends = d[aggName].Ends[timeIndex];
         return fillScale((starts - ends)/(starts + ends))
       })
       .attr("r", function(d) {
-      	console.log(d[aggName].Starts[timeIndex])
       	var starts = d[aggName].Starts[timeIndex];
       	var ends = d[aggName].Ends[timeIndex];
         return areaScale((starts + ends)/hoursPerSeason)
       })
       .on('click', plotStation) 
+      .on('mouseover', tool_tip.show)
+      .on('mouseout', tool_tip.hide)
       .attr("transform", function(d) {
         var projectionTransform = projection([
           d.Lon,
@@ -252,6 +338,10 @@ d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
       .duration(timestep)
       .delay(timestep*delayind)
       .attr("class","station")
+      .each(function(d,i) {
+      	StationOrder[i] = d[aggName].Dst_Ord;
+      	ShowStation[i] = d[aggName].Dst_Show;
+      })
       .attr("fill", function(d) {
       	var starts = d[aggName].Starts[timeIndex];
       	var ends = d[aggName].Ends[timeIndex];
@@ -331,6 +421,21 @@ d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
       .text( monthLabel );
   }
 
+  function updateLines(aggName,hoursPerSeason) {
+     plotgroup.select("#StartLine")
+     		.transition()
+      		.attr("d", function(d) { 
+      			y.domain([0, (d3.max(d3.merge([d[aggName].Starts,d[aggName].Ends])))/hoursPerSeason]);
+    			yaxis.transition().call(d3.axisLeft(y))
+      			return line(d[aggName].Starts); 
+      		});
+	plotgroup.select("#EndLine")
+			.transition()
+      		.attr("d", function(d) { 
+      			return line(d[aggName].Ends); 
+      		});
+  }
+
   function updateStationsSlider(sliderValue,stationdata) {
     updateStations(sliderValue,0,stationdata);
   };
@@ -338,8 +443,9 @@ d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
 d3.select('#select-key-season').on('change', function(a) {
   seasonKey = d3.select(this).property('value');
   aggName = seasonKey + "_" + dayKey,
-  console.log(aggName)
-  updateStations(Time,0,stationdata);
+  updateLines(aggName,hoursPerSeason);
+  updateStations(TimeIndex,0,stationdata);
+  updateMatrix(oddata);
 });
 
 d3.select('#select-key-day').on('change', function(a) {
@@ -350,8 +456,9 @@ d3.select('#select-key-day').on('change', function(a) {
   	{hoursPerSeason = 2*4*3;}
   	else
   	{hoursPerSeason = 5*4*3;}
-  
-  updateStations(Time,0,stationdata);
+  updateLines(aggName,hoursPerSeason);
+  updateStations(TimeIndex,0,stationdata);
+  updateMatrix(oddata);
 });
 
 d3.select('#play').on('click', function(a) {
