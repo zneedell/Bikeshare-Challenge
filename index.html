@@ -112,11 +112,6 @@ var timeScale = d3.scaleTime()
     .range([0,47])
     .clamp(true);
 
-// var reverseTimeScale = d3.scaleTime()
-//     .range([new Date(2000, 0, 1, 0), new Date(2000, 0, 2, 0)])
-//     .time([0,47])
-//     .ticks(48);
-
 var formatTime = d3.timeFormat("%-I %p");
 
 var path = d3.geoPath()
@@ -144,21 +139,11 @@ var sliderbar = sliderSVG.append("rect")
     .attr("fill", "#9DD9D2")
     .attr("height",4 + "px");
 
-// var sliderTray = sliderSVG.append("div")
-//     .attr("class", "slider-tray");
-
-// var sliderHandle = sliderTray.append("g")
-//     .attr("class", "slider-handle");
-
 sliderIcon = sliderSVG.append("circle")
     .attr("class", "slider-handle-icon")
     .attr("cx",sliderStart)
     .attr("cy",10)
     .attr("r",7)
-
-// sliderHandle.append("circle")
-//     .attr("class", "slider-handle-icon")
-
 
 var svg = d3.select("#mapBox").append("svg")
     .attr("width", width)
@@ -174,11 +159,11 @@ var plotgroup = plotsvg.append("g")
           "translate(" + margin.left + "," + margin.top + ")");
 
 var x = d3.scaleLinear()
-  .range([margin.left,plotwidth])
+  .range([margin.left,plotwidth-margin.right])
   .domain([new Date(2000, 0, 1, 0), new Date(2000, 0, 2, 1)]);
     
 var y = d3.scaleLinear()
-  .range([plotheight,margin.bottom])
+  .range([plotheight-margin.top,margin.bottom])
   .domain([0,1000]);
 
 var xaxis = plotsvg.append("g")
@@ -225,6 +210,10 @@ svg.selectAll("g")
 d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
   if (error) return console.warn(error);
 
+  drawStations(stationdata) 
+  loopStations(stationdata)
+
+
   function drawStations(stationdata) {
     svg.selectAll("circle")
       .data(stationdata)
@@ -241,29 +230,7 @@ d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
       	var ends = d[aggName].Ends[timeIndex];
         return areaScale((starts + ends)/hoursPerSeason)
       })
-      .on('click', function(a) { 
-      	y.domain([0, (d3.max(d3.merge([a[aggName].Starts,a[aggName].Ends])))/hoursPerSeason]);
-      	yaxis.transition().call(d3.axisLeft(y))
-      	d3.select("#stationinfo p#stationname")
-      		.text( a.Name );
-      	plotgroup.selectAll("path")
-      		.remove();
-      	plotgroup.append("path")
-      		.datum(a)
-      		.attr("id","StartLine")
-      		.attr("class","line")
-      		.attr("d", function(d) { 
-      			return line(a[aggName].Starts); 
-      		});
-		plotgroup.append("path")
-      		.datum(a)
-      		.attr("id","EndLine")
-      		.attr("class","line")
-      		.attr("d", function(d) { 
-      			return line(a[aggName].Ends); 
-      		});
-
-      	})
+      .on('click', plotStation) 
       .attr("transform", function(d) {
         var projectionTransform = projection([
           d.Lon,
@@ -297,9 +264,29 @@ d3.json("Data/Formatted/stationData2.json",function(error, stationdata) {
       })
   }
 
+  function plotStation(elemData) { 
+      	y.domain([0, (d3.max(d3.merge([elemData[aggName].Starts,elemData[aggName].Ends])))/hoursPerSeason]);
+      	yaxis.transition().call(d3.axisLeft(y))
+      	d3.select("#stationinfo p#stationname")
+      		.text( elemData.Name );
+      	plotgroup.selectAll("path")
+      		.remove();
+      	plotgroup.append("path")
+      		.datum(elemData)
+      		.attr("id","StartLine")
+      		.attr("class","line")
+      		.attr("d", function(d) { 
+      			return line(elemData[aggName].Starts); 
+      		});
+		plotgroup.append("path")
+      		.datum(elemData)
+      		.attr("id","EndLine")
+      		.attr("class","line")
+      		.attr("d", function(d) { 
+      			return line(elemData[aggName].Ends); 
+      		});
 
-  drawStations(stationdata) 
-  loopStations(stationdata)
+      	}
 
   function loopStations(stationdata) {
     for (TimeIndex=0;TimeIndex<48;TimeIndex++) {
