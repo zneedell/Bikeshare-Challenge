@@ -13,7 +13,8 @@ stationName = [stationstruct.Name];
 Lat = [stationstruct.Lat];
 Lon = [stationstruct.Lon];
 
-corrmatrix = pdist(tripArray,'correlation');
+hourlymean = mean(tripArray,1);
+corrmatrix = pdist(tripArray./hourlymean,'correlation');
 corrmatrix = squareform(corrmatrix);
 showThis = ~isnan(corrmatrix(1,:));
 nonNAN = find(showThis);

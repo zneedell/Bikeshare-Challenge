@@ -103,7 +103,7 @@ var timestep = 300;
 
 var boxsize = 4;
 
-var sliderStart = 240;
+var sliderStart = 0;
 
 var seasonKey = "F",
 	dayKey = "WD",
@@ -145,7 +145,7 @@ var StationNames = [],
 	ShowStation = [];
 
 var sliderscale = d3.scaleLinear()
-    .domain([sliderStart,width])
+    .domain([7,width-207])
     .range([0,47])
     .interpolate(d3.interpolateRound)
     .clamp(true);
@@ -255,15 +255,16 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   if (error) return console.warn(error);
 
   drawStations(stationdata);
-  loopStations(stationdata);
+  loopStations(0,stationdata);
   drawMatrix(oddata);
   
   
   console.log(StationNames)
   console.log(StationOrder)
 
-  function drawMatrix(oddata) {
+  function drawMatrix(oddata,stationdata) {
   	console.log(ShowStation)
+  	// stationdata.each(function(d) {console.log(d)})
   	matrixsvg.selectAll("rect")
   		.data(oddata)
   		.enter()
@@ -283,7 +284,8 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   		.attr("height",boxsize);
   }
 
-  function updateMatrix(oddata) {
+  function updateMatrix(oddata,stationdata) {
+  	var count = 0;
   	matrixsvg.selectAll("rect")
   		.attr("fill", function(d) { 
   			return cellScale(d[aggName]-1)})
@@ -314,7 +316,12 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       	var ends = d[aggName].Ends[timeIndex];
         return areaScale((starts + ends)/hoursPerSeason)
       })
-      .on('click', plotStation) 
+      .on('click', function(d) {
+      	d3.selectAll(".station")
+      		.classed("selected",false)
+      	d3.select(this).classed("selected",true).raise()
+      	plotStation(d)
+      }) 
       .on('mouseover', tool_tip.show)
       .on('mouseout', tool_tip.hide)
       .attr("transform", function(d) {
@@ -331,7 +338,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
    		})
   }
 
-  function updateStations(timeIndex,delayind,stationdata) {
+  function updateStations(t,delayind,stationdata) {
     svg.selectAll(".station")
       .transition()
       .ease(d3.easeLinear)
@@ -343,15 +350,24 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       	ShowStation[i] = d[aggName].Dst_Show;
       })
       .attr("fill", function(d) {
-      	var starts = d[aggName].Starts[timeIndex];
-      	var ends = d[aggName].Ends[timeIndex];
+      	var starts = d[aggName].Starts[t];
+      	var ends = d[aggName].Ends[t];
         return fillScale((starts - ends)/(starts + ends))
       })
       .attr("r", function(d) {
-      	var starts = d[aggName].Starts[timeIndex];
-      	var ends = d[aggName].Ends[timeIndex];
+      	var starts = d[aggName].Starts[t];
+      	var ends = d[aggName].Ends[t];
         return areaScale((starts + ends)/hoursPerSeason)
       })
+  }
+
+  function removeTransition(stationdata) {
+    svg.selectAll(".station")
+      .transition()
+      .remove();
+    d3.select(".slider-handle-icon")
+      .transition()
+      .remove();
   }
 
   function plotStation(elemData) { 
@@ -378,37 +394,53 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
 
       	}
 
-  function loopStations(stationdata) {
-    for (TimeIndex=0;TimeIndex<48;TimeIndex++) {
-      updateStations(TimeIndex,TimeIndex,stationdata);
-      updateTimeBox(sliderscale.invert(TimeIndex),TimeIndex)
+  function loopStations(startTime, stationdata) {
+  	console.log(startTime)
+  	d3.select('#play').classed("btn-active",true)
+    for (TimeIndex=startTime;TimeIndex<48;TimeIndex++) {
+    	console.log(TimeIndex)
+      updateStations(TimeIndex,(TimeIndex-startTime),stationdata);
+      updateTimeBox(sliderscale.invert(TimeIndex),(TimeIndex-startTime))
       d3.select(".slider-handle-icon")
         .transition()
         .duration(timestep)
-        .delay(timestep*TimeIndex)
-        .attr("cx", sliderscale.invert(TimeIndex)-sliderStart + "px");
+        .delay(timestep*(TimeIndex-startTime))
+        .attr("cx", sliderscale.invert(TimeIndex) + "px");
     }
+    d3.select(".slider-handle-icon")
+    	.transition()
+    	.duration(0)
+    	.delay(timestep*(TimeIndex-startTime))
+    	.attr("cx", sliderscale.invert(0) + "px")
+    	.on("end", function(d) {
+    		TimeIndex = 0;
+    		console.log(TimeIndex)
+    		updateStationsSlider(TimeIndex,stationdata)
+    		d3.select('#play').classed("btn-active",false)
+    		console.log(d3.select('#play').classed("btn-active"))
+    	});
   }
 
 
   slider.call(d3.drag()
     .on("start", function(){
-      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+    	console.log(d3.mouse(this)[2])
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.mouse(this)[0])})
     .on("drag", function(){
-      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.mouse(this)[0])})
     .on("end", function(){
-      dispatch.call("sliderChange", {about: "I am a context object"}, d3.event.x)})
+      dispatch.call("sliderChange", {about: "I am a context object"}, d3.mouse(this)[0])})
     );
 
   dispatch.on("sliderChange", function(value) {
     // var newvalue = value;
-    if (value - sliderStart < 0) {newvalue = sliderStart}
-      else if (value - sliderStart > width) {newvalue = width+sliderStart}
+    if (value  < 0) {newvalue = 0}
+      else if (value  > width) {newvalue = width}
       else {newvalue = value}
     d3.select(".slider-handle-icon")
         .transition();
     updateTimeBox(newvalue,0)
-    sliderIcon.attr("cx", newvalue-sliderStart + "px");
+    sliderIcon.attr("cx", newvalue + "px");
     TimeIndex = sliderscale(newvalue);
     updateStationsSlider(TimeIndex,stationdata)
   });
@@ -431,10 +463,22 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       		});
 	plotgroup.select("#EndLine")
 			.transition()
+			.duration(600)
       		.attr("d", function(d) { 
       			return line(d[aggName].Ends); 
       		});
   }
+
+function pauseTransition(stationdata) {
+	d3.select(".slider-handle-icon")
+		.transition()
+		.duration(0);
+    var xPosition = parseFloat(d3.select(".slider-handle-icon").attr("cx"));
+	updateTimeBox(xPosition,0)
+	TimeIndex = sliderscale(xPosition)
+	updateStations(TimeIndex,0,stationdata)
+	d3.select('#play').classed("btn-active",false)
+}
 
   function updateStationsSlider(sliderValue,stationdata) {
     updateStations(sliderValue,0,stationdata);
@@ -443,9 +487,11 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
 d3.select('#select-key-season').on('change', function(a) {
   seasonKey = d3.select(this).property('value');
   aggName = seasonKey + "_" + dayKey,
+  // removeTransition(stationdata) 
+  pauseTransition(stationdata)
   updateLines(aggName,hoursPerSeason);
-  updateStations(TimeIndex,0,stationdata);
-  updateMatrix(oddata);
+  updateStations(24,TimeIndex,stationdata);
+  updateMatrix(oddata,stationdata);
 });
 
 d3.select('#select-key-day').on('change', function(a) {
@@ -456,13 +502,24 @@ d3.select('#select-key-day').on('change', function(a) {
   	{hoursPerSeason = 2*4*3;}
   	else
   	{hoursPerSeason = 5*4*3;}
+  // removeTransition(stationdata) 
+  pauseTransition(stationdata)
   updateLines(aggName,hoursPerSeason);
-  updateStations(TimeIndex,0,stationdata);
-  updateMatrix(oddata);
+  updateStations(24,TimeIndex,stationdata);
+  updateMatrix(oddata,stationdata);
 });
 
 d3.select('#play').on('click', function(a) {
-    loopStations(stationdata);
+	if (d3.select(this).classed("btn-active"))
+		{
+			pauseTransition(stationdata)
+		}
+	else {
+		console.log(TimeIndex)
+		loopStations(TimeIndex,stationdata)
+		// d3.select(this).classed("btn-active",true)
+		}
+		console.log(d3.select(this).classed("btn-active"))
 });
 
 });
