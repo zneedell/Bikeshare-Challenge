@@ -37,8 +37,16 @@ body {
   stroke-width: 2px;
 }
 
+#StartLine {
+  stroke: Blue;
+  fill: Blue;
+  opacity: 0.5;
+}
+
 #EndLine {
   stroke: orange;
+  fill: orange;
+  opacity: 0.5;
 }
 
 .map {

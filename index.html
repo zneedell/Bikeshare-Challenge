@@ -22,9 +22,30 @@
     <div class="container">
       <div class="txt-center">
         <h1 class="column12">Bikeshare Map</h1>
+        <nav class="column12 nav nav-small">
+            <a href="#usage">Usage</a>
+            <a href="#nav">Navigation</a>
+            <a href="#text">Text</a>
+            <a href="#btnsAndTables">Buttons and Tables</a>
+            <a href="#grid">Grid</a>
+            <a href="#forms">Forms</a>
+            <a href="#colors">Colors</a>
+        </nav>
       </div>
     </div>
+
   </header>
+
+<section class="bg-light" id="firstdescription">
+    <div class="container">
+      <div class="column6 prefix3">
+        <h4>To start</h4>
+          <div id="contents-md">
+            Instructions go here.
+          </div>
+      </div>
+    </div>
+  </section>
 
 
 <section class="container" id="topmap">
@@ -67,7 +88,7 @@
     <div id="plot" style="text-align:center;"><!-- Map container --> </div>
 </div>
 </section>
-<section class="bg-light" id="firstdescription">
+<section class="bg-light" id="seconddescription">
     <div class="container">
       <div class="column6 prefix3">
         <h4>Instructions</h4>
@@ -99,9 +120,10 @@ var margin = {top: 20, right: 40, bottom: 60, left: 60},
     plotwidth = width - margin.left - margin.right,
     plotheight = plotboxheight - margin.top - margin.bottom;
 
-var timestep = 300;
+var timestep = 600;
 
 var boxsize = 4;
+    nValid = 0;
 
 var sliderStart = 0;
 
@@ -115,13 +137,13 @@ var tiler = d3.geoTile()
     .size([width, height]);
 
 var projection = d3.geoMercator()
-    .center([-71.09, 42.354])
+    .center([-71.08, 42.354])
     .scale((1 << 21) / 2.7 / Math.PI)
     .translate([width / 2, height / 2]);
 
 var areaScale = d3.scaleTime()
-    .domain([0,14])
-    .range([0, 32])
+    .domain([0,20])
+    .range([1, 32])
     .clamp(true);
 
 var fillScale = d3.scaleSequential(d3.interpolateRdBu)
@@ -132,7 +154,7 @@ var cellScale = d3.scaleSequential(d3.interpolatePuOr)
 
 var timeScale = d3.scaleTime()
     .domain([new Date(2000, 0, 1, 0), new Date(2000, 0, 2, 0)])
-    .range([0,47])
+    .range([0,23])
     .clamp(true);
 
 var formatTime = d3.timeFormat("%-I %p");
@@ -146,7 +168,7 @@ var StationNames = [],
 
 var sliderscale = d3.scaleLinear()
     .domain([7,width-207])
-    .range([0,47])
+    .range([0,23])
     .interpolate(d3.interpolateRound)
     .clamp(true);
 
@@ -182,6 +204,7 @@ var tool_tip = d3.tip()
     svg.call(tool_tip);
 
 var matrixsvg = d3.select("#matrixBox").append("svg")
+	.attr("class", "matrixsvg")
     .attr("width", width)
     .attr("height", width);
 
@@ -225,6 +248,16 @@ var line = d3.line()
     	return y(d/hoursPerSeason); })
     .curve(d3.curveCardinal);
 
+var stationArea = d3.area()
+	.x(function(d,i) {
+		return x(timeScale.invert(i));
+	})
+	.y0(function(d) { 
+    	return y(-d[1]/hoursPerSeason); })
+    .y1(function(d) { 
+    	return y(d[0]/hoursPerSeason); })
+    .curve(d3.curveCardinal);
+
 svg.selectAll("g")
     .data(tiler
       .scale(projection.scale() * 2 * Math.PI)
@@ -232,8 +265,8 @@ svg.selectAll("g")
   .enter().append("g")
     .each(function(d) {
       var g = d3.select(this);
-      d3.queue().defer(d3.json,"https://vector.mapzen.com/osm/water/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=vector-tiles-LM25tq4")
-      .defer(d3.json,"https://vector.mapzen.com/osm/roads/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=vector-tiles-LM25tq4")
+      d3.queue().defer(d3.json,"https://vector.mapzen.com/osm/water/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=mapzen-jovEguC")
+      .defer(d3.json,"https://vector.mapzen.com/osm/roads/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=mapzen-jovEguC")
       .await(function(error,file1,file2) {
         if (error) throw error;
           g.selectAll("path")
@@ -257,6 +290,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   drawStations(stationdata);
   loopStations(0,stationdata);
   drawMatrix(oddata);
+  console.log(stationdata[3])
   
   
   console.log(StationNames)
@@ -285,7 +319,13 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   }
 
   function updateMatrix(oddata,stationdata) {
+  	console.log(nValid)
   	var count = 0;
+  	console.log("LOOK")
+  	console.log(d3.select(".matrixsvg").attr("width"))
+  	d3.select(".matrixsvg")
+  		.attr("width",nValid*boxsize)
+  		.attr("height",nValid*boxsize);
   	matrixsvg.selectAll("rect")
   		.attr("fill", function(d) { 
   			return cellScale(d[aggName]-1)})
@@ -297,11 +337,15 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   }
 
   function drawStations(stationdata) {
+  	nValid = 0;
     svg.selectAll("circle")
       .data(stationdata)
       .enter().append("circle")
       .attr("class","station")
       .each(function(d,i) {
+      	if (d[aggName].Dst_Show) {
+      		nValid += 1;
+      	}
       	StationNames = StationNames.concat(d["Name"]);
       	StationOrder = StationOrder.concat(d[aggName].Dst_Ord);
       	ShowStation = ShowStation.concat(d[aggName].Dst_Show);
@@ -316,6 +360,8 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       	var ends = d[aggName].Ends[timeIndex];
         return areaScale((starts + ends)/hoursPerSeason)
       })
+      .style("opacity", function(d) {
+      	return +d[aggName].Dst_Show})
       .on('click', function(d) {
       	d3.selectAll(".station")
       		.classed("selected",false)
@@ -330,15 +376,10 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
           d.Lat
           ]) ;
         return "translate(" + projectionTransform+ ")"})
-    	.append("title")
-    	.text(function(d) {
-    		return "(" + 
-      		d["Name"]
-    		 + ")"
-   		})
   }
 
   function updateStations(t,delayind,stationdata) {
+  	nValid = 0;
     svg.selectAll(".station")
       .transition()
       .ease(d3.easeLinear)
@@ -346,6 +387,9 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       .delay(timestep*delayind)
       .attr("class","station")
       .each(function(d,i) {
+      	if (d[aggName].Dst_Show) {
+      		nValid += 1;
+      	}
       	StationOrder[i] = d[aggName].Dst_Ord;
       	ShowStation[i] = d[aggName].Dst_Show;
       })
@@ -359,6 +403,8 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       	var ends = d[aggName].Ends[t];
         return areaScale((starts + ends)/hoursPerSeason)
       })
+      .style("opacity", function(d) {
+      	return +d[aggName].Dst_Show})
   }
 
   function removeTransition(stationdata) {
@@ -371,7 +417,13 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   }
 
   function plotStation(elemData) { 
-      	y.domain([0, (d3.max(d3.merge([elemData[aggName].Starts,elemData[aggName].Ends])))/hoursPerSeason]);
+  	var arr = [elemData[aggName].Starts];
+      	arr = d3.transpose(arr.concat([elemData[aggName].Ends]));
+      	var border = d3.max(d3.max(arr));
+      	console.log(d3.max(d3.max(arr)))
+      	// y.domain([0, (d3.max(d3.merge([elemData[aggName].Starts,elemData[aggName].Ends])))/hoursPerSeason]);
+      	y.domain([-border/hoursPerSeason,border/hoursPerSeason]);
+
       	yaxis.transition().call(d3.axisLeft(y))
       	d3.select("#stationinfo p#stationname")
       		.text( elemData.Name );
@@ -382,27 +434,27 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       		.attr("id","StartLine")
       		.attr("class","line")
       		.attr("d", function(d) { 
-      			return line(elemData[aggName].Starts); 
+      			// return line(elemData[aggName].Starts); 
+      			return stationArea(arr); 
       		});
-		plotgroup.append("path")
-      		.datum(elemData)
-      		.attr("id","EndLine")
-      		.attr("class","line")
-      		.attr("d", function(d) { 
-      			return line(elemData[aggName].Ends); 
-      		});
+		// plotgroup.append("path")
+  //     		.datum(elemData)
+  //     		.attr("id","EndLine")
+  //     		.attr("class","line")
+  //     		.attr("d", function(d) { 
+  //     			return line(elemData[aggName].Ends); 
+  //     		});
 
       	}
 
   function loopStations(startTime, stationdata) {
-  	console.log(startTime)
-  	d3.select('#play').classed("btn-active",true)
-    for (TimeIndex=startTime;TimeIndex<48;TimeIndex++) {
-    	console.log(TimeIndex)
+  	d3.select('#play').classed("active",true)
+    for (TimeIndex=startTime;TimeIndex<24;TimeIndex++) {
       updateStations(TimeIndex,(TimeIndex-startTime),stationdata);
       updateTimeBox(sliderscale.invert(TimeIndex),(TimeIndex-startTime))
       d3.select(".slider-handle-icon")
         .transition()
+        .ease(d3.easeLinear)
         .duration(timestep)
         .delay(timestep*(TimeIndex-startTime))
         .attr("cx", sliderscale.invert(TimeIndex) + "px");
@@ -416,8 +468,8 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
     		TimeIndex = 0;
     		console.log(TimeIndex)
     		updateStationsSlider(TimeIndex,stationdata)
-    		d3.select('#play').classed("btn-active",false)
-    		console.log(d3.select('#play').classed("btn-active"))
+    		d3.select('#play').classed("active",false)
+    		console.log(d3.select('#play').classed("active"))
     	});
   }
 
@@ -464,9 +516,14 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
 	plotgroup.select("#EndLine")
 			.transition()
 			.duration(600)
-      		.attr("d", function(d) { 
-      			return line(d[aggName].Ends); 
-      		});
+			.attr("d", function(d) {
+				return line(y(d[aggName].Ends))
+			}
+				)
+      		// .attr("d", function(d) { 
+      			// return line(d[aggName].Ends); 
+      		// })
+;
   }
 
 function pauseTransition(stationdata) {
@@ -477,7 +534,7 @@ function pauseTransition(stationdata) {
 	updateTimeBox(xPosition,0)
 	TimeIndex = sliderscale(xPosition)
 	updateStations(TimeIndex,0,stationdata)
-	d3.select('#play').classed("btn-active",false)
+	d3.select('#play').classed("active",false)
 }
 
   function updateStationsSlider(sliderValue,stationdata) {
@@ -490,7 +547,7 @@ d3.select('#select-key-season').on('change', function(a) {
   // removeTransition(stationdata) 
   pauseTransition(stationdata)
   updateLines(aggName,hoursPerSeason);
-  updateStations(24,TimeIndex,stationdata);
+  updateStations(TimeIndex,0,stationdata);
   updateMatrix(oddata,stationdata);
 });
 
@@ -505,12 +562,12 @@ d3.select('#select-key-day').on('change', function(a) {
   // removeTransition(stationdata) 
   pauseTransition(stationdata)
   updateLines(aggName,hoursPerSeason);
-  updateStations(24,TimeIndex,stationdata);
+  updateStations(TimeIndex,0,stationdata);
   updateMatrix(oddata,stationdata);
 });
 
 d3.select('#play').on('click', function(a) {
-	if (d3.select(this).classed("btn-active"))
+	if (d3.select(this).classed("active"))
 		{
 			pauseTransition(stationdata)
 		}
@@ -519,7 +576,7 @@ d3.select('#play').on('click', function(a) {
 		loopStations(TimeIndex,stationdata)
 		// d3.select(this).classed("btn-active",true)
 		}
-		console.log(d3.select(this).classed("btn-active"))
+		console.log(d3.select(this).classed("active"))
 });
 
 });

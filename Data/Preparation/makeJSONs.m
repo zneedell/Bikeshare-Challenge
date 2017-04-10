@@ -1,6 +1,6 @@
 dname='../Trips/';
 files=dir([dname,'*.csv']);
-nHourBins = 2;
+nHourBins = 1;
 
 %% Load All Trips
 
