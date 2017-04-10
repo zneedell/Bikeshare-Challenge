@@ -193,6 +193,10 @@ sliderIcon = sliderSVG.append("circle")
     .attr("cy",10)
     .attr("r",7)
 
+// var triangle = d3.symbol()
+// 	.type('triangle-up')
+// 	.size(5);
+
 var svg = d3.select("#mapBox").append("svg")
     .attr("width", width)
     .attr("height", height);
@@ -203,9 +207,11 @@ var tool_tip = d3.tip()
       .html(function(d) { return d["Name"]; });
     svg.call(tool_tip);
 
+var matrixLeft = 20;
+
 var matrixsvg = d3.select("#matrixBox").append("svg")
 	.attr("class", "matrixsvg")
-    .attr("width", width)
+    .attr("width", width+matrixLeft)
     .attr("height", width);
 
 var matrix_tool_tip = d3.tip()
@@ -213,6 +219,10 @@ var matrix_tool_tip = d3.tip()
       .offset([-8, 0])
       .html(function(d) { return StationNames[d["O"]] + "<br>vs. <br> " + StationNames[d["D"]] });
     matrixsvg.call(matrix_tool_tip);
+
+// var mat_triangle = matrixsvg.append("path")
+//   		.attr("class","pointer")
+// 		.attr("d", triangle());
 
 var plotsvg = d3.select("#plot").append("svg")
     .attr("width", width+ margin.left + margin.right)
@@ -223,6 +233,8 @@ var plotgroup = plotsvg.append("g")
     .attr("id","linechartgroup")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
+
+var nLinesShown = 0;
 
 var x = d3.scaleLinear()
   .range([margin.left,plotwidth-margin.right])
@@ -240,7 +252,7 @@ var yaxis = plotsvg.append("g")
   .call(d3.axisLeft(y))
   .attr("transform","translate(" +margin.left + ",0)")
 
-var line = d3.line()
+var stationLine = d3.line()
 	.x(function(d,i) {
 		return x(timeScale.invert(i));
 	})
@@ -253,9 +265,9 @@ var stationArea = d3.area()
 		return x(timeScale.invert(i));
 	})
 	.y0(function(d) { 
-    	return y(-d[1]/hoursPerSeason); })
+    	return y(-d[1]); })
     .y1(function(d) { 
-    	return y(d[0]/hoursPerSeason); })
+    	return y(d[0]); })
     .curve(d3.curveCardinal);
 
 svg.selectAll("g")
@@ -290,7 +302,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   drawStations(stationdata);
   loopStations(0,stationdata);
   drawMatrix(oddata);
-  console.log(stationdata[3])
+  plotStation(stationdata[3])
   
   
   console.log(StationNames)
@@ -299,6 +311,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   function drawMatrix(oddata,stationdata) {
   	console.log(ShowStation)
   	// stationdata.each(function(d) {console.log(d)})
+
   	matrixsvg.selectAll("rect")
   		.data(oddata)
   		.enter()
@@ -309,14 +322,28 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   		.attr("class","cell")
   		.on('mouseover', matrix_tool_tip.show)
       	.on('mouseout', matrix_tool_tip.hide)
+      	.on('click', function(d) {
+      			var origin = d["O"]
+      			var destination = d["D"]
+      			plotPairHelper(origin,destination)
+      		}
+      	)
   		.attr("fill", function(d) { 
   			return cellScale(d[aggName]-1)})
   		.attr("transform", function(d){
-  			return("translate("+ StationOrder[d["O"]-1]*boxsize+ "," + StationOrder[d["D"]-1]*boxsize +")")
+  			return("translate("+ (StationOrder[d["O"]-1]*boxsize+10) + "," + StationOrder[d["D"]-1]*boxsize +")")
   			})
   		.attr("width",boxsize)
   		.attr("height",boxsize);
   }
+
+function plotPairHelper(Oid,Did) {
+	console.log(stationdata[Oid])
+	if (nLinesShown == 1) {
+		plotStationPair(stationdata[Oid],stationdata[Did])}
+	else
+		{updateStationPair(stationdata[Oid],stationdata[Did])}
+}
 
   function updateMatrix(oddata,stationdata) {
   	console.log(nValid)
@@ -330,7 +357,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   		.attr("fill", function(d) { 
   			return cellScale(d[aggName]-1)})
   		.attr("transform", function(d){
-  			return("translate("+ StationOrder[d["O"]-1]*boxsize+ "," + StationOrder[d["D"]-1]*boxsize +")")
+  			return("translate("+ (StationOrder[d["O"]-1]*boxsize+10)+ "," + StationOrder[d["D"]-1]*boxsize +")")
   			})
   		.attr("width",boxsize)
   		.attr("height",boxsize);
@@ -417,34 +444,141 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   }
 
   function plotStation(elemData) { 
-  	var arr = [elemData[aggName].Starts];
-      	arr = d3.transpose(arr.concat([elemData[aggName].Ends]));
-      	var border = d3.max(d3.max(arr));
-      	console.log(d3.max(d3.max(arr)))
-      	// y.domain([0, (d3.max(d3.merge([elemData[aggName].Starts,elemData[aggName].Ends])))/hoursPerSeason]);
-      	y.domain([-border/hoursPerSeason,border/hoursPerSeason]);
-
+      	y.domain([0, (d3.max(d3.merge([elemData[aggName].Starts,elemData[aggName].Ends])))/hoursPerSeason]);
+      	// y.domain([-border/hoursPerSeason,border/hoursPerSeason]);
+      	plotsvg.selectAll(".pointer")
+      		.attr('transform',function(d){ return "translate("+5+","+(boxsize*elemData.Dst_Ord)+")"; });
       	yaxis.transition().call(d3.axisLeft(y))
       	d3.select("#stationinfo p#stationname")
       		.text( elemData.Name );
       	plotgroup.selectAll("path")
       		.remove();
-      	plotgroup.append("path")
+		plotgroup.append("path")
       		.datum(elemData)
       		.attr("id","StartLine")
       		.attr("class","line")
       		.attr("d", function(d) { 
-      			// return line(elemData[aggName].Starts); 
-      			return stationArea(arr); 
+      			return stationLine(elemData[aggName].Starts); 
       		});
-		// plotgroup.append("path")
-  //     		.datum(elemData)
-  //     		.attr("id","EndLine")
-  //     		.attr("class","line")
-  //     		.attr("d", function(d) { 
-  //     			return line(elemData[aggName].Ends); 
-  //     		});
+		plotgroup.append("path")
+      		.datum(elemData)
+      		.attr("id","EndLine")
+      		.attr("class","line")
+      		.attr("d", function(d) { 
+      			return stationLine(elemData[aggName].Ends); 
+      		});
+  	nLinesShown = 1;
+      	}
 
+  function updateLines(aggName,hoursPerSeason) {
+     plotgroup.select("#StartLine")
+     		.transition()
+     		.duration(600)
+      		.attr("d", function(d) { 
+      			y.domain([0, (d3.max(d3.merge([d[aggName].Starts,d[aggName].Ends])))/hoursPerSeason]);
+    			yaxis.transition().call(d3.axisLeft(y))
+      			return stationLine(d[aggName].Starts); 
+      		});
+	plotgroup.select("#EndLine")
+			.transition()
+			.duration(600)
+			.attr("d", function(d) {
+				return stationLine((d[aggName].Ends))
+			}
+				);
+    nLinesShown = 1;
+  }
+
+  function updateStationPair(elemData1,elemData2) { 
+  	var arr1_1 = elemData1[aggName].Starts;
+  		arr1_1 = normalize(arr1_1);
+  		arr1_1 = [arr1_1];
+  		console.log(arr1_1)
+  	var	arr1_2 = elemData1[aggName].Ends;
+  		arr1_2 = normalize(arr1_2);
+  		arr1_2 = [arr1_2];
+    var arr1 = d3.transpose(arr1_1.concat(arr1_2));
+    	console.log(arr1)
+  	var arr2_1 = elemData2[aggName].Starts;
+  		arr2_1 = normalize(arr2_1);
+  		arr2_1 = [arr2_1];
+  		console.log(arr2_1)
+  	var	arr2_2 = elemData2[aggName].Ends;
+  		arr2_2 = normalize(arr2_2);
+  		arr2_2 = [arr2_2];
+    var arr2 = d3.transpose(arr2_1.concat(arr2_2));
+    var border = d3.max(d3.max(arr1.concat(arr2)));
+    console.log(border)
+      	y.domain([-border,border]);
+
+      	yaxis.transition().call(d3.axisLeft(y))
+      	d3.select("#stationinfo p#stationname")
+      		.text( elemData1.Name );
+      	plotgroup.select("#firstArea")
+      		.datum(elemData1)
+      		.attr("d", function(d) { 
+      			return stationArea(arr1)}); 
+      	plotgroup.select("#secondArea")
+      		.datum(elemData2)
+      		.attr("d", function(d) { 
+      			return stationArea(arr2); 
+      		});
+  	nLinesShown = 2;
+      	}
+
+function normalize(arr) {
+	var N = arr.length;
+	var S = 0;
+	for (ii = 0; ii < N; ii++ ) {
+		S += arr[ii];
+	}
+	for (ii = 0; ii < N; ii++ ) {
+		arr[ii] = arr[ii]/S;
+	}
+	return arr
+}
+
+function plotStationPair(elemData1,elemData2) { 
+  	var arr1_1 = elemData1[aggName].Starts;
+  		arr1_1 = normalize(arr1_1);
+  		arr1_1 = [arr1_1];
+  		console.log(arr1_1)
+  	var	arr1_2 = elemData1[aggName].Ends;
+  		arr1_2 = normalize(arr1_2);
+  		arr1_2 = [arr1_2];
+    var arr1 = d3.transpose(arr1_1.concat(arr1_2));
+    	console.log(arr1)
+  	var arr2_1 = elemData2[aggName].Starts;
+  		arr2_1 = normalize(arr2_1);
+  		arr2_1 = [arr2_1];
+  		console.log(arr2_1)
+  	var	arr2_2 = elemData2[aggName].Ends;
+  		arr2_2 = normalize(arr2_2);
+  		arr2_2 = [arr2_2];
+    var arr2 = d3.transpose(arr2_1.concat(arr2_2));
+    var border = d3.max(d3.max(arr1.concat(arr2)));
+    console.log(border)
+      	y.domain([-border,border]);
+
+      	yaxis.transition().call(d3.axisLeft(y))
+      	d3.select("#stationinfo p#stationname")
+      		.text( elemData1.Name );
+      	plotgroup.selectAll("path")
+      		.remove();
+      	plotgroup.append("path")
+      		.datum(elemData1)
+      		.attr("id","firstArea")
+      		.attr("class","area")
+      		.attr("d", function(d) { 
+      			return stationArea(arr1)}); 
+      	plotgroup.append("path")
+      		.datum(elemData2)
+      		.attr("id","secondArea")
+      		.attr("class","area")
+      		.attr("d", function(d) { 
+      			return stationArea(arr2); 
+      		});
+  	nLinesShown = 2;
       	}
 
   function loopStations(startTime, stationdata) {
@@ -503,27 +637,6 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
       .transition()
       .delay(delay*timestep)
       .text( monthLabel );
-  }
-
-  function updateLines(aggName,hoursPerSeason) {
-     plotgroup.select("#StartLine")
-     		.transition()
-      		.attr("d", function(d) { 
-      			y.domain([0, (d3.max(d3.merge([d[aggName].Starts,d[aggName].Ends])))/hoursPerSeason]);
-    			yaxis.transition().call(d3.axisLeft(y))
-      			return line(d[aggName].Starts); 
-      		});
-	plotgroup.select("#EndLine")
-			.transition()
-			.duration(600)
-			.attr("d", function(d) {
-				return line(y(d[aggName].Ends))
-			}
-				)
-      		// .attr("d", function(d) { 
-      			// return line(d[aggName].Ends); 
-      		// })
-;
   }
 
 function pauseTransition(stationdata) {
