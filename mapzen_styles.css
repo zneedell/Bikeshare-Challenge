@@ -100,6 +100,7 @@ body {
 
 .station {stroke: #252525; stroke-width: 0.5px; }
 .station.selected {stroke: #252525; stroke-width: 3.5px; }
+.station.neighbor {stroke: yellow; stroke-width: 3.5px; }
 
 .info {
   position: absolute;
@@ -242,6 +243,12 @@ body {
   width: 100%;
   text-align: center;
   height: 15px;
+}
+
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
 }
 
 #date

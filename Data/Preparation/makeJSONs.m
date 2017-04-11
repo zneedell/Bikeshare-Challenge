@@ -95,7 +95,7 @@ startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;
 stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
 
 [ tripArray, stationstruct ] = addArrivalDeparture( today, stationstruct, startInd, stopInd );
-[ ODstruct , stationstruct] = createTripStruct( today, ODstruct, stationstruct, tripArray );
+[ ODstruct , stationstruct, OD, Forder] = createTripStruct( today, ODstruct, stationstruct, tripArray );
 [stationstruct.F_WD] = stationstruct.StartStop; stationstruct = orderfields(stationstruct,[1:9,11,10:10]); stationstruct = rmfield(stationstruct,'StartStop');
 [ODstruct.F_WD] = ODstruct.CORR; ODstruct = orderfields(ODstruct,[1:8,10,9:9]); ODstruct = rmfield(ODstruct,'CORR');
 
@@ -105,11 +105,13 @@ startInd = floor(nHourBins*hours(timeofday(today.starttime)))+1;
 stopInd = floor(nHourBins*hours(timeofday(today.stoptime)))+1;
 
 [ tripArray, stationstruct ] = addArrivalDeparture( today, stationstruct, startInd, stopInd );
-[ ODstruct , stationstruct, OD] = createTripStruct( today, ODstruct, stationstruct, tripArray );
+[ ODstruct , stationstruct, OD, Forder] = createTripStruct( today, ODstruct, stationstruct, tripArray );
 [stationstruct.F_WE] = stationstruct.StartStop; stationstruct = orderfields(stationstruct,[1:10,12,11:11]); stationstruct = rmfield(stationstruct,'StartStop');
 [ODstruct.F_WE] = ODstruct.CORR; ODstruct = orderfields(ODstruct,[1:9,11,10:10]); ODstruct = rmfield(ODstruct,'CORR');
 %%
+[ stationstruct ] = addTransition( today, stationstruct );
 
+%%
 jsontext = jsonencode(stationstruct);
 fileID = fopen('../Formatted/stationData2.json','w');
 fprintf(fileID,'%s',jsontext);
