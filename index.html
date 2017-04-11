@@ -40,9 +40,14 @@
 <section class="bg-light" id="firstdescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>To start</h4>
+        <h4>About:</h4>
           <div id="contents-md">
-            Instructions go here.
+<p>
+This is a bunch of loosely-related plots and graphics capturing some of the interesting qualities of Hubway ridership in 2016. The general goal is to capture some of the spatial and temporal patterns of bike sharing in Boston to get a better idea of how Hubway fits in with the Greater Boston transportation network.</p>
+
+<p>First, to get a sense of what the demand looks like, below is a plot of each station's ridership over an average day. The width of each circle represents the total number of trips starting or ending there, and the color represents the ratio of arrivals to departures (arrivals are red, departures are blue). Clicking on any station pulls up a more detailed picture of that station's activity patterns in the box below the map. The two lines represent the average number of arrivals and departures per hour over the given time period.</p>
+
+<p>Change the time period being shown with the dropdowns below the map. Season controls the season of 2016, day of the week allows for toggling betwen weekdays and weekends.</p>
           </div>
       </div>
     </div>
@@ -88,13 +93,15 @@
     </div>
     <div id="plot" style="text-align:center;"><!-- Map container --> </div>
 </div>
+</section>
+<section class="bg-light" id="middledescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>Instructions</h4>
+        <h4>Station Similarity:</h4>
           <div id="contents-md">
-            <ul>
-            <li> Instructions go here.
-            </ul>
+            <p> One (perhaps) interesting question about station usage patterns concerns their similarity--which stations show the most similar and divergent travel patterns throughout the day, and how are they spread across the Boston area. Below is a representation of the correlation matrix between the stations' activity patterns. Each square represents the similarity between a pair of stations--purple pairs show similar patterns throughout the day, orange pairs show divergent temporal patterns. Clicking on a pair brings their information to the plot box above, each represented by a different color. Now, the area above 0 represents the average number of arrivals per hour, and below zero represents departures. Stations are ordered to maximize similarity between adjacent stations. </p>
+
+            <p> Similarity in temporal patterns is not the only way of linking similar stations. Change the dropdown box below to Connectivity, and station pairs are now colored based on how often trips are taken between them.  Stations are ordered based on the Fieldler vector--a method to arrange them in a way to come as close as possible to breaking the stations into disjoint sets (the Eastie stations come close!).</p>
           </div>
       </div>
     </div>
@@ -136,9 +143,9 @@
 <section class="bg-light" id="fourthdescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>To start</h4>
+        <h4>Monte Carlo</h4>
           <div id="contents-md">
-            Instructions go here.
+            One other
           </div>
       </div>
     </div>
