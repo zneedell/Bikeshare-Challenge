@@ -23,15 +23,6 @@
     <div class="container">
       <div class="txt-center">
         <h1 class="column12">Bikeshare Map</h1>
-        <nav class="column12 nav nav-small">
-            <a href="#usage">Usage</a>
-            <a href="#nav">Navigation</a>
-            <a href="#text">Text</a>
-            <a href="#btnsAndTables">Buttons and Tables</a>
-            <a href="#grid">Grid</a>
-            <a href="#forms">Forms</a>
-            <a href="#colors">Colors</a>
-        </nav>
       </div>
     </div>
 
@@ -145,11 +136,26 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
       <div class="column6 prefix3">
         <h4>Monte Carlo</h4>
           <div id="contents-md">
-            One other
+            One other question that I kept coming back to was--how long would you expect it take for a bicycle to visit every station. This can be thought of as a Markov process, which is made up of a bunch of stations (here: Stations) and transitions between them (here: Trips). The likelihood of each transition depends only on the current state--or, here, where each bike goes next only depends on where (and when) it is now, not where it was before. Below is a simple Monte Carlo simulation of a single bike traveling across the Hubway network. Each trip, the bike randomly chooses the next station based on the observed trip probabilities from 2016. (Note: It gets stuck sometimes, if so hit play again).
           </div>
       </div>
     </div>
   </section>
+<section class="bg-dark" id="thanks">
+    <div class="container">
+      <div class="column6 prefix3">
+        <h4>Thanks</h4>
+          <div id="contents-md">
+            <p>CSS is minimal-ui by Susie Lu: http://minimal-ui.susielu.com. Map tiles are from Mapzen: http://mapzen.com. All maps and visualizations are done in d3, with much help from all of Mike Bostock's tutorials. All bugs are my own--feel free to let me know if you find any.</p>
+
+            <p> Contact: zneedell@gmail.com</p>
+
+          </div>
+      </div>
+    </div>
+  </section>
+
+
 
 </section>
 
@@ -283,10 +289,6 @@ var mcsvg = d3.select("#MCbox").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-var mcchartsvg = d3.select("#MCchart").append("svg")
-	.attr("class","map")
-    .attr("width", width)
-    .attr("height", height/3);
 
 
 var plotsvg = d3.select("#plot").append("svg")
@@ -508,15 +510,15 @@ function plotPairHelper(Oid,Did) {
   	 mcsvg.select(".bike")
   	 	.transition()
   	 	.ease(d3.easeLinear)
-  	 	.duration(200)
-  	 	.delay(200*delay)
+  	 	.duration(150)
+  	 	.delay(150*delay)
   	 	.on("end", function(d) {
   	 		counts[newStation] += 1;
   	 		console.log(counts)
   	 		mcsvg.selectAll(".station")
      			.transition()
   	 			.ease(d3.easeLinear)
-  	 			.duration(200)
+  	 			.duration(150)
      			.attr("r",function(d,i) {
      		// newr = mcsvg.selectAll(".station")
      		// 	.filter(function (d, i) { return i === newStation;})
@@ -538,7 +540,7 @@ function plotPairHelper(Oid,Did) {
   function loopMCstation(stationData) {
   	var trans = stationdata[startstation].Trans.Dest
   	console.log(counts)
-    for (loop = 0; loop < 200; loop++) {
+    for (loop = 0; loop < 500; loop++) {
   		var output = drawFromDistribution(trans)
   		// counts[output] += 1; 
   		trans = updateMCstation(stationData,output,loop)
