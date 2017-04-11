@@ -22,7 +22,8 @@
   <header>
     <div class="container">
       <div class="txt-center">
-        <h1 class="column12">Bikeshare Map</h1>
+        <h1 class="column12">Hubway Data Visualization Challenge</h1>
+        <h4 class="column12">Zach Needell</h4>
         <nav class="column12 nav nav-small">
             <a href="#usage">Usage</a>
             <a href="#nav">Navigation</a>
@@ -40,9 +41,12 @@
 <section class="bg-light" id="firstdescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>To start</h4>
+        <h4>About:</h4>
           <div id="contents-md">
-            Instructions go here.
+            <p>This is a bunch of loosely-related plots and graphics capturing some of the interesting qualities of Hubway ridership in 2016. The general goal is to capture some of the spatial and temporal patterns of bike sharing in Boston to get a better idea of how Hubway fits in with the Greater Boston transportation network.</p>
+
+            <p> First, to get a sense of what the demand looks like, here is a plot of each station's ridership over an average day. The width of each circle represents the total number of trips starting or ending there, and the color represents the ratio of arrivals to departures (arrivals are red, departures are blue). Use the Season and Day of Week dropdowns to explore how these demand patterns change seasonally and between weekdays and weekends.</p>
+
           </div>
       </div>
     </div>
@@ -88,13 +92,17 @@
     </div>
     <div id="plot" style="text-align:center;"><!-- Map container --> </div>
 </div>
+</section>
+<section class="bg-light" id="timedescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>Instructions</h4>
+        <h4>Temporal Patterns</h4>
           <div id="contents-md">
-            <ul>
-            <li> Instructions go here.
-            </ul>
+            <p> Clicking on a station brings up a more detailed picture of the station's temporal arrival and departure patterns in the plot box above. A natural question that can arise here is which stations are more similar and different in terms of their temporal patterns.</p>
+
+            <p> Below is a matrix showing the degree of correlation between each pair of stations in terms of temporal patterns. They are arranged in order to bring together clusters of stations following similar patterns. Stations that are positively correlated show up in purple, and negatively correlated in orange. Clicking on a cell in the matrix brings both station's daily patterns into the plot box above. Now, the area above 0 represents departures, and the area below 0 represents arrivals.</p>
+
+            <p> Switching the connector box to Connectivity shows the number of trips between each pair of stations over the given time period. Stations here are ordered by the Fiedler vector, which is a way of trying to break up the stations into as close to disjoint subsets as possible.</p>
           </div>
       </div>
     </div>
@@ -103,7 +111,7 @@
 <section class="container" id="matrixcontainer">
     <div id="selector" class="column12">
       <b> Distance Matrix:</b> &nbsp &nbsp
-        <select id="select-key-season">
+        <select id="select-key-corr">
           <option value="CORR" selected="selected">Correlation</option>
           <option value="FLOW">Connectivity</option>
         </select>
@@ -114,9 +122,9 @@
 <section class="bg-light" id="fourthdescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>To start</h4>
+        <h4>Monte Carlo</h4>
           <div id="contents-md">
-            Instructions go here.
+            Finally, 
           </div>
       </div>
     </div>
@@ -139,6 +147,19 @@
         <h4>To start</h4>
           <div id="contents-md">
             Instructions go here.
+          </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-dark" id="fourthdescription">
+    <div class="container">
+      <div class="column6 prefix3">
+        <h4>Thanks</h4>
+          <div id="contents-md">
+            <p>This is all done in d3, with much help from all of Mike Bostock's tutorials. Css is from Susie Lu: http://minimal-ui.susielu.com. Vector tiles in the map background are from Mapzen: https://mapzen.com. Thanks!</p>
+
+            <p> Contact: zneedell@gmail.com </p>
           </div>
       </div>
     </div>
@@ -275,11 +296,6 @@ var mcsvg = d3.select("#MCbox").append("svg")
 	.attr("class","map")
     .attr("width", width)
     .attr("height", height);
-
-var mcchartsvg = d3.select("#MCchart").append("svg")
-	.attr("class","map")
-    .attr("width", width)
-    .attr("height", height/3);
 
 
 var plotsvg = d3.select("#plot").append("svg")
@@ -890,6 +906,12 @@ d3.select('#select-key-day').on('change', function(a) {
   updateMatrix(oddata,stationdata);
 });
 
+d3.select('#select-key-corr').on('change', function(a) {
+  corrName = d3.select(this).property('value');
+  pauseTransition(stationdata)
+  updateMatrix(oddata,stationdata);
+});
+
 d3.select('#play').on('click', function(a) {
 	if (d3.select(this).classed("active"))
 		{
@@ -906,6 +928,8 @@ d3.select('#play').on('click', function(a) {
 d3.select('#play_mc').on('click', function(a) {
 	loopMCstation(stationdata)
 });
+
+
 
 });
 
