@@ -102,7 +102,7 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
 <section class="container" id="matrixcontainer">
     <div id="selector" class="column12">
       <b> Distance Matrix:</b> &nbsp &nbsp
-        <select id="select-key-season">
+        <select id="select-key-corr">
           <option value="CORR" selected="selected">Correlation</option>
           <option value="FLOW">Connectivity</option>
         </select>
@@ -141,7 +141,7 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
       <div class="column6 prefix3">
         <h4>Thanks</h4>
           <div id="contents-md">
-            <p>CSS is minimal-ui by Susie Lu: http://minimal-ui.susielu.com. Map tiles are from Mapzen: http://mapzen.com. All maps and visualizations are done in d3, with much help from all of Mike Bostock's tutorials. All bugs are my own--feel free to let me know if you find any.</p>
+            <p>CSS is <a href="http://minimal-ui.susielu.com">minimal-ui</a> by Susie Lu: . Map tiles are from <a href="http://mapzen.com">Mapzen</a>. All maps and visualizations are done in d3, with much help from all of Mike Bostock's tutorials. All bugs are my own--feel free to let me know if you find any. Moving map initiall inspired by this map of <a href="http://tipstrategies.com/interactive/2014_map/">Job Locations</a>.</p>
 
             <p> Contact: zneedell@gmail.com</p>
 
@@ -900,6 +900,13 @@ d3.select('#select-key-season').on('change', function(a) {
   pauseTransition(stationdata)
   updateLines(aggName,hoursPerSeason);
   updateStations(TimeIndex,0,stationdata);
+  updateMatrix(oddata,stationdata);
+});
+
+
+d3.select('#select-key-corr').on('change', function(a) {
+  corrName = d3.select(this).property('value');
+  pauseTransition(stationdata)
   updateMatrix(oddata,stationdata);
 });
 
