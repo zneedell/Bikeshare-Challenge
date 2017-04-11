@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Bikeshare map</title>
+  <title>Hubway map</title>
   <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.18.0/d3-legend.js"></script>
 <script src="d3.geo.tile.min.js"></script>
@@ -22,7 +22,8 @@
   <header>
     <div class="container">
       <div class="txt-center">
-        <h1 class="column12">Bikeshare Map</h1>
+        <h1 class="column12">Hubway Data Visualization Challenge</h1>
+        <h4 class="column12">Zach Nedell</h4>
       </div>
     </div>
 
@@ -112,9 +113,9 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
 <section class="bg-light" id="fourthdescription">
     <div class="container">
       <div class="column6 prefix3">
-        <h4>To start</h4>
+        <h4>Monte Carlo</h4>
           <div id="contents-md">
-            Instructions go here.
+            One other question that I kept coming back to was--how long would you expect it take for a bicycle to visit every station. This can be thought of as a Markov process, which is made up of a bunch of stations (here: Stations) and transitions between them (here: Trips). The likelihood of each transition depends only on the current state--or, here, where each bike goes next only depends on where (and when) it is now, not where it was before. Below is a simple Monte Carlo simulation of a single bike traveling across the Hubway network. Each trip, the bike randomly chooses the next station based on the observed trip probabilities from 2016. (Note: It gets stuck sometimes, if so hit play again).
           </div>
       </div>
     </div>
@@ -131,16 +132,7 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
 </div>
 <div id="MCchart" class="txt-center" style="text-align:center;"><!-- Box container -->
 </div>
-<section class="bg-light" id="fourthdescription">
-    <div class="container">
-      <div class="column6 prefix3">
-        <h4>Monte Carlo</h4>
-          <div id="contents-md">
-            One other question that I kept coming back to was--how long would you expect it take for a bicycle to visit every station. This can be thought of as a Markov process, which is made up of a bunch of stations (here: Stations) and transitions between them (here: Trips). The likelihood of each transition depends only on the current state--or, here, where each bike goes next only depends on where (and when) it is now, not where it was before. Below is a simple Monte Carlo simulation of a single bike traveling across the Hubway network. Each trip, the bike randomly chooses the next station based on the observed trip probabilities from 2016. (Note: It gets stuck sometimes, if so hit play again).
-          </div>
-      </div>
-    </div>
-  </section>
+
 <section class="bg-dark" id="thanks">
     <div class="container">
       <div class="column6 prefix3">
