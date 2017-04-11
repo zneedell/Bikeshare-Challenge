@@ -2,14 +2,65 @@ body {
   margin: 0;
 }
 
+    .d3-tip {
+      line-height: 1;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+ 
+    /* Creates a small triangle extender for the tooltip */
+    .d3-tip:after {
+      box-sizing: border-box;
+      display: inline;
+      font-size: 10px;
+      width: 100%;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.8);
+      content: "\25BC";
+      position: absolute;
+      text-align: center;
+    }
+ 
+    /* Style northward tooltips specifically */
+    .d3-tip.n:after {
+      margin: -2px 0 0 0;
+      top: 100%;
+      left: 0;
+    }
+
 .line {
   fill: none;
   stroke: darkmagenta;
   stroke-width: 2px;
 }
 
+.area {
+  fill: none;
+  stroke: darkmagenta;
+  stroke-width: 2px;
+}
+
+#StartLine {
+  stroke: blue;
+}
+
 #EndLine {
   stroke: orange;
+}
+
+#firstArea {
+  stroke: blue;
+  fill: blue;
+  opacity: 0.5;
+}
+
+#secondArea {
+  stroke: orange;
+  fill: orange;
+  opacity: 0.5;
 }
 
 .map {
@@ -48,6 +99,8 @@ body {
 .rail { stroke: #d9d9d9; stroke-width: 0.5px; }
 
 .station {stroke: #252525; stroke-width: 0.5px; }
+.station.selected {stroke: #252525; stroke-width: 3.5px; }
+.station.neighbor {stroke: yellow; stroke-width: 3.5px; }
 
 .info {
   position: absolute;
@@ -190,6 +243,12 @@ body {
   width: 100%;
   text-align: center;
   height: 15px;
+}
+
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
 }
 
 #date
