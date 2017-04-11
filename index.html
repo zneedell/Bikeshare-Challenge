@@ -127,11 +127,14 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
     <div id="selector" class="column12">
       <b> Start Simulation:</b> &nbsp &nbsp
         <div id="play_mc"><button class="btn">Play</button></div>
+        
       </div>
 <div id="MCbox" class="txt-center" style="text-align:center;"><!-- Box container -->
 </div>
-<div id="MCchart" class="txt-center" style="text-align:center;"><!-- Box container -->
-</div>
+<div id="countsinfo" style="text-align:center;">
+          Number Visited:
+      <p id="nstationsvisited"></p>
+      </div>
 
 <section class="bg-dark" id="thanks">
     <div class="container">
@@ -208,6 +211,8 @@ var timeScale = d3.scaleTime()
     .clamp(true);
 
 var formatTime = d3.timeFormat("%-I %p");
+
+var nVisited = 0;
 
 var path = d3.geoPath()
     .projection(projection);
@@ -497,16 +502,40 @@ function plotPairHelper(Oid,Did) {
   }
 
 
+function scalecounts(arr) {
+  var arrsum = 0;
+  var N = arr.length;
+  var nnz = 0;
+  for (ii =0; ii<N; ii++)
+  {
+    arrsum += arr[ii]
+    if(arr[ii] > 0) {
+      nnz+=1;
+    }
+  }
+  if (arrsum > 100) {
+    for (ii =0; ii<N; ii++)
+  {
+    arr[ii] = arr[ii]/arrsum*100
+  }
+  }
+  nVisited = nnz;
+  return arr
+}
 
   function updateMCstation(stationData,newStation,delay) {
+     
   	 mcsvg.select(".bike")
   	 	.transition()
   	 	.ease(d3.easeLinear)
   	 	.duration(150)
   	 	.delay(150*delay)
   	 	.on("end", function(d) {
+        
   	 		counts[newStation] += 1;
-  	 		console.log(counts)
+        counts = scalecounts(counts);
+        d3.select("#countsinfo p#nstationsvisited")
+          .text( nVisited );
   	 		mcsvg.selectAll(".station")
      			.transition()
   	 			.ease(d3.easeLinear)
