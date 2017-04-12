@@ -191,9 +191,14 @@ var projection = d3.geoMercator()
     .scale((1 << 21) / 2.7 / Math.PI)
     .translate([width / 2, height / 2]);
 
-var areaScale = d3.scaleTime()
+var areaScale = d3.scaleSqrt()
     .domain([0,20])
-    .range([1, 32])
+    .range([1, 25])
+    .clamp(true);
+
+var mcAreaScale = d3.scaleTime()
+    .domain([0,16])
+    .range([0, 28])
     .clamp(true);
 
 var fillScale = d3.scaleSequential(d3.interpolateRdBu)
@@ -275,7 +280,7 @@ var matrixsvg = d3.select("#matrixBox").append("svg")
 var matrix_tool_tip = d3.tip()
       .attr("class", "d3-tip")
       .offset([-8, 0])
-      .html(function(d) { return StationNames[d["O"]] + "<br>vs. <br> " + StationNames[d["D"]] });
+      .html(function(d) { return StationNames[d["O"]] + "<br>and <br> " + StationNames[d["D"]] });
     matrixsvg.call(matrix_tool_tip);
 
 // var mat_triangle = matrixsvg.append("path")
@@ -286,7 +291,11 @@ var mcsvg = d3.select("#MCbox").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-
+var mc_plot_tip = d3.tip()
+      .attr("class", "d3-tip")
+      .offset([0, 0])
+      .html(function(d) { return d["Name"]; });
+    mcsvg.call(mc_plot_tip);
 
 var plotsvg = d3.select("#plot").append("svg")
     .attr("width", width+ margin.left + margin.right)
@@ -437,7 +446,7 @@ d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
   			}
   		})
   		.attr("transform", function(d){
-  			return("translate("+ (StationOrder[d["O"]-1]*boxsize+10) + "," + StationOrder[d["D"]-1]*boxsize +")")
+  			return("translate("+ (StationOrder[d["O"]-1]*boxsize) + "," + StationOrder[d["D"]-1]*boxsize +")")
   			})
   		.attr("width",boxsize)
   		.attr("height",boxsize);
@@ -469,7 +478,7 @@ function plotPairHelper(Oid,Did) {
   			}
   		})
   		.attr("transform", function(d){
-  			return("translate("+ (StationOrder[d["O"]-1]*boxsize+10)+ "," + StationOrder[d["D"]-1]*boxsize +")")
+  			return("translate("+ (StationOrder[d["O"]-1]*boxsize)+ "," + StationOrder[d["D"]-1]*boxsize +")")
   			})
   		.attr("width",boxsize)
   		.attr("height",boxsize);
@@ -483,6 +492,8 @@ function plotPairHelper(Oid,Did) {
       .attr("fill", "blue")
       .attr("r", 0)
       .attr("opacity",0.5)
+      .on('mouseover', mc_plot_tip.show)
+      .on('mouseout', mc_plot_tip.hide)
       .attr("transform", function(d) {
         var projectionTransform = projection([
           d.Lon,
@@ -513,10 +524,10 @@ function scalecounts(arr) {
       nnz+=1;
     }
   }
-  if (arrsum > 120) {
+  if (arrsum > 90) {
     for (ii =0; ii<N; ii++)
   {
-    arr[ii] = arr[ii]/arrsum*120
+    arr[ii] = arr[ii]/arrsum*90
   }
   }
   nVisited = nnz;
@@ -546,7 +557,7 @@ function scalecounts(arr) {
      		// 	.attr("r");
      	 //    console.log(newr)
      		// return +newr + 2
-     		return counts[i]*2
+     		return mcAreaScale(counts[i])
      		})
   	 	})
       	.attr("transform", function(d) {
@@ -906,7 +917,8 @@ d3.select('#select-key-season').on('change', function(a) {
 
 d3.select('#select-key-corr').on('change', function(a) {
   corrName = d3.select(this).property('value');
-  pauseTransition(stationdata)
+  pauseTransition(stationdata);
+  updateStations(TimeIndex,0,stationdata);
   updateMatrix(oddata,stationdata);
 });
 
