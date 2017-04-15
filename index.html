@@ -197,7 +197,7 @@ var areaScale = d3.scaleSqrt()
     .clamp(true);
 
 var mcAreaScale = d3.scaleTime()
-    .domain([0,11])
+    .domain([0,20])
     .range([0, 30])
     .clamp(true);
 
@@ -525,10 +525,10 @@ function scalecounts(arr, ind) {
       nnz+=1;
     }
   }
-  if (arrsum > 100) {
+  if (arrsum > 200) {
     for (ii =0; ii<N; ii++)
   {
-    arr[ii] = arr[ii]/arrsum*100
+    arr[ii] = arr[ii]/arrsum*200
   }
   }
   nVisited = nnz;
@@ -573,7 +573,7 @@ function scalecounts(arr, ind) {
   function loopMCstation(stationData) {
   	var trans = stationdata[startstation].Trans.Dest
   	console.log(counts)
-    for (loop = 0; loop < 500; loop++) {
+    for (loop = 0; loop < 1000; loop++) {
   		var output = drawFromDistribution(trans)
   		// counts[output] += 1; 
   		trans = updateMCstation(stationData,output,loop)
