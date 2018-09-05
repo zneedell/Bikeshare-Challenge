@@ -34,7 +34,6 @@
       <div class="column6 prefix3">
         <h4>About:</h4>
           <div id="contents-md">
-		  <p>Note: Mapzen appears to have taken down its vector tile hosting service, so the basemaps on this page no longer work. Sorry about that! </p>
 <p>
 This is a bunch of loosely-related plots and graphics capturing some of the interesting qualities of Hubway ridership in 2016. The general goal is to capture some of the spatial and temporal patterns of bike sharing in Boston to get a better idea of how Hubway fits in with the Greater Boston transportation network.</p>
 
@@ -142,7 +141,7 @@ This is a bunch of loosely-related plots and graphics capturing some of the inte
       <div class="column6 prefix3">
         <h4>Thanks</h4>
           <div id="contents-md">
-            <p>CSS is <a href="http://minimal-ui.susielu.com">minimal-ui</a> by Susie Lu. Map tiles are from <a href="http://mapzen.com">Mapzen</a>. All maps and visualizations are done in d3, with much help from all of Mike Bostock's tutorials. All bugs are my own--feel free to let me know if you find any. Moving map initially inspired by this map of <a href="http://tipstrategies.com/interactive/2014_map/">Job Locations</a>.</p>
+            <p>CSS is <a href="http://minimal-ui.susielu.com">minimal-ui</a> by Susie Lu. Map tiles are from <a href="https://www.nextzen.org">Nextzen</a>. All maps and visualizations are done in d3, with much help from all of Mike Bostock's tutorials. All bugs are my own--feel free to let me know if you find any. Moving map initially inspired by this map of <a href="http://tipstrategies.com/interactive/2014_map/">Job Locations</a>.</p>
 
             <p> Contact: zneedell@gmail.com</p>
 
@@ -381,26 +380,28 @@ svg.selectAll("g")
       var g = d3.select(this);
       var g2 = mcsvg.selectAll("g")
       	.filter(function (d, j) { return i === j;});
-      d3.queue().defer(d3.json,"https://vector.mapzen.com/osm/water/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=mapzen-jovEguC")
-      .defer(d3.json,"https://vector.mapzen.com/osm/roads/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=mapzen-jovEguC")
-      .await(function(error,file1,file2) {
+      d3.queue().defer(d3.json,"https://tile.nextzen.org/tilezen/vector/v1/all/" + d[2] + "/" + d[0] + "/" + d[1] + ".json?api_key=ZYEDW_iTSRquBCTSBN4-cA")
+      .await(function(error,file1) {
         if (error) throw error;
           g.selectAll("path")
-            .data(file1.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
+            .data(file1.roads.features.sort(function(a, b) { 
+              return a.properties.sort_key - b.properties.sort_key; }))
             .enter().append("path")
             .attr("class", function(d) { var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
            .attr("d", path);
           g2.selectAll("path")
-          .data(file1.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
+          .data(file1.roads.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
             .enter().append("path")
             .attr("class", function(d) { var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
            .attr("d", path);
-          g.selectAll("path")
-            .data(file2.features.sort(function(a, b) { return a.properties.sort_key - b.properties.sort_key; }))
-            .enter().append("path")
-            .attr("class", function(d) { 
-              var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
-            .attr("d", path);
+//          g.selectAll("path")
+//            .data(file1.water.features.sort(function(a, b) { 
+//              console.log(a);
+//              return a.properties.sort_key - b.properties.sort_key; }))
+//            .enter().append("path")
+//            .attr("class", function(d) { 
+//              var kind = d.properties.kind || ''; if(d.properties.boundary){kind += '_boundary';} return kind; })
+//            .attr("d", path);
       });
     });
 d3.queue().defer(d3.json,"Data/Formatted/stationData2.json")
